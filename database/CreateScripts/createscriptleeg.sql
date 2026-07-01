@@ -68,7 +68,7 @@ CREATE TABLE Gebruiker
         ,Tussenvoegsel           VARCHAR(20)                         NULL DEFAULT NULL
         ,Achternaam              VARCHAR(50)                     NOT NULL
         ,Straat                  VARCHAR(100)                    NOT NULL
-        ,Huisnummer              TINYINT                         NOT NULL
+        ,Huisnummer              INT                             NOT NULL
         ,Toevoeging              VARCHAR(5)                          NULL DEFAULT NULL
         ,Postcode                VARCHAR(6)                      NOT NULL
         ,Woonplaats              VARCHAR(50)                     NOT NULL

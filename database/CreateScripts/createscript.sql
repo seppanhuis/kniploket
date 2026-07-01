@@ -68,7 +68,7 @@ CREATE TABLE Gebruiker
         ,Tussenvoegsel           VARCHAR(20)                         NULL DEFAULT NULL
         ,Achternaam              VARCHAR(50)                     NOT NULL
         ,Straat                  VARCHAR(100)                    NOT NULL
-        ,Huisnummer              TINYINT                         NOT NULL
+        ,Huisnummer              INT                             NOT NULL
         ,Toevoeging              VARCHAR(5)                          NULL DEFAULT NULL
         ,Postcode                VARCHAR(6)                      NOT NULL
         ,Woonplaats              VARCHAR(50)                     NOT NULL
@@ -639,7 +639,10 @@ VALUES
 ,(2,'manager','manager123','Linda',NULL,'Jansen','Markt',8,NULL,'5211AB','Den Bosch','0622222222','manager@salon.nl',SYSDATE(6),1,NULL,SYSDATE(6),SYSDATE(6))
 ,(3,'emma','welkom123','Emma',NULL,'de Vries','Schoolstraat',25,NULL,'5481CD','Schijndel','0633333333','emma@salon.nl',SYSDATE(6),1,NULL,SYSDATE(6),SYSDATE(6))
 ,(4,'sophie','welkom123','Sophie',NULL,'Bakker','Dorpsstraat',41,NULL,'5473EF','Heeswijk','0644444444','sophie@mail.nl',SYSDATE(6),1,NULL,SYSDATE(6),SYSDATE(6))
-,(4,'tom','welkom123','Tom','van','Dijk','Stationsweg',9,'A','5271GH','Sint-Michielsgestel','0655555555','tom@mail.nl',SYSDATE(6),1,NULL,SYSDATE(6),SYSDATE(6));
+,(4,'tom','welkom123','Tom','van','Dijk','Stationsweg',9,'A','5271GH','Sint-Michielsgestel','0655555555','tom@mail.nl',SYSDATE(6),1,NULL,SYSDATE(6),SYSDATE(6))
+,(4,'lisa','welkom123','Lisa',NULL,'de Jong','Kerkstraat',14,NULL,'5432IJ','Oss','0666666666','lisa@mail.nl',SYSDATE(6),1,NULL,SYSDATE(6),SYSDATE(6))
+,(4,'max','welkom123','Max',NULL,'Visser','Lindelaan',7,NULL,'5462KL','Veghel','0677777777','max@mail.nl',SYSDATE(6),1,NULL,SYSDATE(6),SYSDATE(6))
+,(4,'sara','welkom123','Sara',NULL,'Meijer','Beekstraat',3,NULL,'5471MN','Heeswijk','0688888888','sara@mail.nl',SYSDATE(6),1,NULL,SYSDATE(6),SYSDATE(6));
 
 -- Step: 24
 -- *****************************************************************
@@ -658,9 +661,9 @@ INSERT INTO Klant
 VALUES
  (4,'Geen parfum',1,NULL,SYSDATE(6),SYSDATE(6))
 ,(5,'Extra gevoelige huid',1,NULL,SYSDATE(6),SYSDATE(6))
-,(4,'Liever ochtendafspraak',1,NULL,SYSDATE(6),SYSDATE(6))
-,(5,'Geen gelnagels',1,NULL,SYSDATE(6),SYSDATE(6))
-,(4,NULL,1,NULL,SYSDATE(6),SYSDATE(6));
+,(6,'Liever ochtendafspraak',1,NULL,SYSDATE(6),SYSDATE(6))
+,(7,'Geen gelnagels',1,NULL,SYSDATE(6),SYSDATE(6))
+,(8,NULL,1,NULL,SYSDATE(6),SYSDATE(6));
 
 -- Step: 25
 -- *****************************************************************
