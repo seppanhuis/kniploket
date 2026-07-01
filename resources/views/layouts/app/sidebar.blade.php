@@ -19,6 +19,15 @@
                     <flux:sidebar.item icon="users" :href="route('klanten.index')" :current="request()->routeIs('klanten.*')" wire:navigate>
                         {{ __('Klanten') }}
                     </flux:sidebar.item>
+
+                     <flux:sidebar.item
+                        icon="calendar-days"
+                        :href="route('afspraken.index')"
+                        :current="request()->routeIs('afspraken.*')"
+                        wire:navigate>
+                        {{ __('Afspraken') }}
+                    </flux:sidebar.item>
+
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
