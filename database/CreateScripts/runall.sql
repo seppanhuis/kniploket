@@ -1422,6 +1422,16 @@ BEGIN
     IF EXISTS (
         SELECT 1
         FROM Afspraak
+        WHERE TIMESTAMP(Datum, StartTijd) < TIMESTAMP(p_datum, p_eindTijd)
+          AND TIMESTAMP(Datum, EindTijd) > TIMESTAMP(p_datum, p_startTijd)
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Er bestaat al een afspraak op dit tijdslot';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM Afspraak
         WHERE MedewerkerId = p_medewerkerId
           AND DATE(Datum) = DATE(p_datum)
           AND (
@@ -1574,6 +1584,17 @@ CREATE PROCEDURE sp_UpdateAfspraak(
 )
 BEGIN
 
+
+    IF EXISTS (
+        SELECT 1
+        FROM Afspraak
+        WHERE Id <> p_id
+          AND TIMESTAMP(Datum, StartTijd) < TIMESTAMP(p_datum, p_eindTijd)
+          AND TIMESTAMP(Datum, EindTijd) > TIMESTAMP(p_datum, p_startTijd)
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Er bestaat al een afspraak op dit tijdslot';
+    END IF;
 
     IF EXISTS (
         SELECT 1
