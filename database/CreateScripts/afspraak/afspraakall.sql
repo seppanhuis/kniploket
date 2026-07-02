@@ -124,7 +124,6 @@ BEGIN
         S.Naam AS Status,
 
         DATE_FORMAT(A.Datum, '%d-%m-%Y') AS Datum,
-
         DATE_FORMAT(A.StartTijd, '%H:%i') AS StartTijd,
         DATE_FORMAT(A.EindTijd, '%H:%i') AS EindTijd,
 
