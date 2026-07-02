@@ -12,30 +12,35 @@
             </div>
 
             <a href="{{ route('producten.create') }}"
-               class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200">
+                class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200">
                 Nieuw product
             </a>
         </div>
 
+        {{-- ALERTS --}}
         @if (session('success'))
-            <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200">
+            <div
+                class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200">
                 {{ session('success') }}
             </div>
         @endif
 
         @if (session('error'))
-            <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
+            <div
+                class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
                 {{ session('error') }}
             </div>
         @endif
 
+        {{-- LOW STOCK --}}
         @if ($lowStockProducts->isNotEmpty())
-            <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
+            <div
+                class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
                 <p class="font-semibold">Lage voorraad waarschuwingen</p>
                 <ul class="mt-2 list-disc space-y-1 pl-5">
                     @foreach ($lowStockProducts as $product)
                         <li>
-                            {{ $product->ProductNaam }} heeft nog {{ $product->Voorraad }} stuks op voorraad
+                            {{ $product->ProductNaam }} heeft nog {{ $product->Voorraad }} stuks
                             (minimum {{ $product->MinimumVoorraad }}).
                         </li>
                     @endforeach
@@ -43,34 +48,22 @@
             </div>
         @endif
 
-        <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        {{-- TABLE WRAPPER --}}
+        <div
+            class="rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
 
             {{-- DESKTOP TABLE --}}
-            <div class="hidden overflow-hidden lg:block">
+            <div class="hidden lg:block">
                 <table class="w-full table-fixed border-collapse">
                     <thead class="bg-zinc-50 dark:bg-zinc-950/40">
                         <tr>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-zinc-600 dark:text-zinc-300 w-48">
-                                Productnaam
-                            </th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-zinc-600 dark:text-zinc-300">
-                                Categorie
-                            </th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-zinc-600 dark:text-zinc-300">
-                                EAN-code
-                            </th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-zinc-600 dark:text-zinc-300">
-                                Voorraad
-                            </th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-zinc-600 dark:text-zinc-300">
-                                Leverancier
-                            </th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-zinc-600 dark:text-zinc-300">
-                                Behandelingen
-                            </th>
-                            <th class="px-4 py-3 text-center text-sm font-medium text-zinc-600 dark:text-zinc-300">
-                                Acties
-                            </th>
+                            <th class="px-4 py-3 text-left text-sm font-medium">Product</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium">Categorie</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium">EAN</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium">Voorraad</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium">Leverancier</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium">Behandelingen</th>
+                            <th class="px-4 py-3 text-center text-sm font-medium">Acties</th>
                         </tr>
                     </thead>
 
@@ -78,61 +71,60 @@
                         @forelse ($products as $product)
                             <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
 
-                                <td class="px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100">
-                                    <div class="truncate" title="{{ $product->ProductNaam }}">
-                                        {{ $product->ProductNaam }}
-                                    </div>
+                                <td class="px-4 py-3 text-sm font-medium truncate" title="{{ $product->ProductNaam }}">
+                                    {{ $product->ProductNaam }}
                                 </td>
 
-                                <td class="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-300">
-                                    {{ $product->categorie_naam ?? '-' }}
-                                </td>
+                                <td class="px-4 py-3 text-sm">{{ $product->categorie_naam ?? '-' }}</td>
 
-                                <td class="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-300 whitespace-nowrap">
+                                <td class="px-4 py-3 text-sm" title="EAN Code {{ $product->EANCode }}">
                                     {{ $product->EANCode }}
                                 </td>
 
-                                <td class="px-4 py-3 text-sm font-medium {{ $product->low_stock ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-zinc-100' }}">
+                                <td class="px-4 py-3 text-sm font-medium
+                                        {{ $product->low_stock ? 'text-amber-600' : 'text-zinc-900 dark:text-zinc-100' }}"
+                                    title="Voorraad: {{ $product->Voorraad }}">
                                     {{ $product->Voorraad }}
 
                                     @if ($product->low_stock)
-                                        <span class="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                                            Lage voorraad
-                                        </span>
+                                        <span class="ml-2 text-xs text-amber-600">⚠</span>
                                     @endif
                                 </td>
 
-                                <td class="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-300">
-                                    {{ $product->leverancier_naam ?? '-' }}
-                                </td>
+                                <td class="px-4 py-3 text-sm">{{ $product->leverancier_naam ?? '-' }}</td>
 
-                                <td class="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-300">
+                                <td class="px-4 py-3 text-sm truncate" title="Behandelingen">
                                     {{ $product->treatments->isNotEmpty() ? $product->treatments->join(', ') : '-' }}
                                 </td>
 
                                 {{-- ACTIONS --}}
                                 <td class="px-4 py-3">
-                                    <div class="flex flex-col items-center gap-2">
+                                    <div class="flex flex-row items-center justify-center gap-2">
 
                                         {{-- EDIT --}}
                                         <a href="{{ route('producten.edit', $product->Id) }}"
-                                           class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 hover:bg-emerald-500 transition">
-                                            <img src="https://img.icons8.com/ios-filled/50/ffffff/edit.png"
-                                                 class="h-5 w-5" alt="edit">
+                                            class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 hover:bg-emerald-500 transition"
+                                            title="Product bewerken">
+
+                                            <img src="https://img.icons8.com/ios-filled/50/ffffff/edit.png" alt="edit"
+                                                class="h-5 w-5">
                                         </a>
 
                                         {{-- DELETE --}}
-                                        <form action="{{ route('producten.destroy', $product->Id) }}"
-                                              method="POST"
-                                              onsubmit="return confirm('Weet je zeker dat je dit product wilt uitschakelen?');">
+                                        <form action="{{ route('producten.destroy', $product->Id) }}" method="POST"
+                                            onsubmit="return confirm('Weet je zeker dat je dit product wilt uitschakelen?');">
+
                                             @csrf
                                             @method('DELETE')
 
                                             <button type="submit"
-                                                    class="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-600 hover:bg-rose-500 transition">
-                                                <img src="https://img.icons8.com/ios-filled/50/ffffff/delete.png"
-                                                     class="h-5 w-5" alt="delete">
+                                                class="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-600 hover:bg-rose-500 transition"
+                                                title="Product verwijderen">
+
+                                                <img src="https://img.icons8.com/ios-filled/50/ffffff/delete.png" alt="delete"
+                                                    class="h-5 w-5">
                                             </button>
+
                                         </form>
 
                                     </div>
@@ -141,7 +133,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                                <td colspan="7" class="text-center py-8 text-sm text-zinc-500">
                                     Geen producten gevonden
                                 </td>
                             </tr>
@@ -150,78 +142,87 @@
                 </table>
             </div>
 
-            {{-- MOBILE CARDS --}}
-            <div class="space-y-3 p-3 lg:hidden">
+            {{-- GRID VERSION (DESKTOP EXTRA MODERN LOOK) --}}
+            <div class="hidden xl:grid grid-cols-2 gap-3 p-4">
+                @foreach ($products as $product)
+                    <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 p-3 bg-white dark:bg-zinc-950">
 
-                @forelse ($products as $product)
-                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/60">
-
-                        <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                                    {{ $product->ProductNaam }}
-                                </h3>
-                                <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                    {{ $product->categorie_naam ?? '-' }}
-                                </p>
+                        <div class="flex justify-between">
+                            <div class="font-semibold text-sm truncate" title="{{ $product->ProductNaam }}">
+                                {{ $product->ProductNaam }}
                             </div>
 
-                            <span class="rounded-full px-2.5 py-1 text-xs font-medium
-                                {{ $product->low_stock
-                                    ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
-                                    : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' }}">
-                                {{ $product->Voorraad }} in voorraad
-                            </span>
+                            <div class="text-xs text-zinc-500" title="Voorraad">
+                                {{ $product->Voorraad }}
+                            </div>
                         </div>
 
-                        <dl class="mt-3 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
+                        <div class="text-xs text-zinc-500 mt-1" title="EAN">
+                            {{ $product->EANCode }}
+                        </div>
 
-                            <div class="flex justify-between gap-3">
-                                <dt class="font-medium">EAN</dt>
-                                <dd class="text-right break-all">{{ $product->EANCode }}</dd>
-                            </div>
+                        <div class="mt-2 flex justify-between text-xs">
+                            <span>{{ $product->categorie_naam ?? '-' }}</span>
+                            <span>{{ $product->leverancier_naam ?? '-' }}</span>
+                        </div>
 
-                            <div class="flex justify-between gap-3">
-                                <dt class="font-medium">Leverancier</dt>
-                                <dd class="text-right">{{ $product->leverancier_naam ?? '-' }}</dd>
-                            </div>
-
-                            <div>
-                                <dt class="font-medium">Behandelingen</dt>
-                                <dd class="text-zinc-600 dark:text-zinc-400">
-                                    {{ $product->treatments->isNotEmpty() ? $product->treatments->join(', ') : '-' }}
-                                </dd>
-                            </div>
-
-                        </dl>
-
-                        {{-- ACTIONS --}}
-                        <div class="mt-4 flex flex-col gap-2">
-
+                        <div class="mt-3 flex gap-2">
                             <a href="{{ route('producten.edit', $product->Id) }}"
-                               class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 hover:bg-emerald-500 transition">
-                                <img src="https://img.icons8.com/ios-filled/50/ffffff/edit.png"
-                                     class="h-5 w-5" alt="edit">
+                                class="flex-1 text-center text-xs bg-emerald-600 text-white rounded py-1" title="Bewerken">
+                                Edit
                             </a>
 
-                            <form action="{{ route('producten.destroy', $product->Id) }}"
-                                  method="POST"
-                                  onsubmit="return confirm('Weet je zeker dat je dit product wilt uitschakelen?');">
+                            <form action="{{ route('producten.destroy', $product->Id) }}" method="POST">
                                 @csrf
                                 @method('DELETE')
 
-                                <button type="submit"
-                                        class="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-600 hover:bg-rose-500 transition">
-                                    <img src="https://img.icons8.com/ios-filled/50/ffffff/delete.png"
-                                         class="h-5 w-5" alt="delete">
+                                <button class="flex-1 text-xs bg-rose-600 text-white rounded py-1" title="Verwijderen">
+                                    Del
                                 </button>
                             </form>
+                        </div>
 
+                    </div>
+                @endforeach
+            </div>
+
+            {{-- MOBILE --}}
+            <div class="space-y-3 p-3 lg:hidden">
+
+                @forelse ($products as $product)
+                    <div class="rounded-xl border p-4 dark:border-zinc-800">
+
+                        <div class="flex justify-between">
+                            <div class="text-sm font-semibold" title="{{ $product->ProductNaam }}">
+                                {{ $product->ProductNaam }}
+                            </div>
+
+                            <span class="text-xs">{{ $product->Voorraad }}</span>
+                        </div>
+
+                        <div class="text-xs text-zinc-500 mt-1">
+                            {{ $product->EANCode }}
+                        </div>
+
+                        <div class="mt-3 flex gap-2">
+                            <a href="{{ route('producten.edit', $product->Id) }}"
+                                class="flex-1 text-xs bg-emerald-600 text-white rounded py-1 text-center">
+                                Edit
+                            </a>
+
+                            <form action="{{ route('producten.destroy', $product->Id) }}" method="POST">
+                                @csrf
+                                @method('DELETE')
+
+                                <button class="flex-1 text-xs bg-rose-600 text-white rounded py-1">
+                                    Del
+                                </button>
+                            </form>
                         </div>
 
                     </div>
                 @empty
-                    <div class="px-4 py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                    <div class="text-center text-sm text-zinc-500">
                         Geen producten gevonden
                     </div>
                 @endforelse
