@@ -49,7 +49,7 @@ class AfspraakController extends Controller
 
         $data['is_actief'] = $request->boolean('is_actief');
 
-        // 🔥 FIX: tijd check (belangrijk)
+        // ✔ tijd check
         if (strtotime($data['eind_tijd']) <= strtotime($data['start_tijd'])) {
             return back()
                 ->withInput()
@@ -58,6 +58,7 @@ class AfspraakController extends Controller
                 ]);
         }
 
+        // ✔ overlap check
         if ($this->hasOverlap(
             $data['medewerker_id'],
             $data['datum'],
@@ -76,21 +77,6 @@ class AfspraakController extends Controller
             : back()->withInput()->with('error', 'Afspraak kon niet worden toegevoegd');
     }
 
-    public function edit(int $id): View
-    {
-        $afspraak = $this->afspraakModel->spGetAfspraakById($id);
-        abort_if(! $afspraak, 404);
-
-        return view('afspraken.edit', [
-            'title' => 'Afspraak wijzigen',
-            'afspraak' => $afspraak,
-            'klanten' => $this->getKlanten(),
-            'medewerkers' => $this->getMedewerkers(),
-            'behandelingen' => $this->getBehandelingen(),
-            'statussen' => $this->getStatussen(),
-        ]);
-    }
-
     public function update(Request $request, int $id): RedirectResponse
     {
         $data = $request->validate([
@@ -107,6 +93,7 @@ class AfspraakController extends Controller
 
         $data['is_actief'] = $request->boolean('is_actief');
 
+        // ✔ tijd check
         if (strtotime($data['eind_tijd']) <= strtotime($data['start_tijd'])) {
             return back()
                 ->withInput()
@@ -115,6 +102,7 @@ class AfspraakController extends Controller
                 ]);
         }
 
+        // ✔ overlap check
         if ($this->hasOverlap(
             $data['medewerker_id'],
             $data['datum'],
