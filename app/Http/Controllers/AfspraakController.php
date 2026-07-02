@@ -40,10 +40,7 @@ class AfspraakController extends Controller
             'medewerker_id' => ['required', 'integer'],
             'behandeling_id' => ['required', 'integer'],
             'afspraak_status_id' => ['required', 'integer'],
-
-            // 🔥 FIX: geen verleden afspraken
             'datum' => ['required', 'date', 'after_or_equal:today'],
-
             'start_tijd' => ['required'],
             'eind_tijd' => ['required'],
             'opmerking' => ['nullable', 'string', 'max:255'],
@@ -51,6 +48,15 @@ class AfspraakController extends Controller
         ]);
 
         $data['is_actief'] = $request->boolean('is_actief');
+
+        // 🔥 FIX: tijd check (belangrijk)
+        if (strtotime($data['eind_tijd']) <= strtotime($data['start_tijd'])) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'eind_tijd' => 'De eindtijd mag niet eerder zijn dan de starttijd.'
+                ]);
+        }
 
         if ($this->hasOverlap(
             $data['medewerker_id'],
@@ -65,21 +71,14 @@ class AfspraakController extends Controller
 
         $result = $this->afspraakModel->spCreateAfspraak($data);
 
-        if ($result && $result->new_id) {
-            return redirect()
-                ->route('afspraken.index')
-                ->with('success', 'Afspraak succesvol toegevoegd');
-        }
-
-        return back()
-            ->withInput()
-            ->with('error', 'Afspraak kon niet worden toegevoegd');
+        return ($result && $result->new_id)
+            ? redirect()->route('afspraken.index')->with('success', 'Afspraak succesvol toegevoegd')
+            : back()->withInput()->with('error', 'Afspraak kon niet worden toegevoegd');
     }
 
     public function edit(int $id): View
     {
         $afspraak = $this->afspraakModel->spGetAfspraakById($id);
-
         abort_if(! $afspraak, 404);
 
         return view('afspraken.edit', [
@@ -99,10 +98,7 @@ class AfspraakController extends Controller
             'medewerker_id' => ['required', 'integer'],
             'behandeling_id' => ['required', 'integer'],
             'afspraak_status_id' => ['required', 'integer'],
-
-            // 🔥 FIX: geen verleden afspraken
             'datum' => ['required', 'date', 'after_or_equal:today'],
-
             'start_tijd' => ['required'],
             'eind_tijd' => ['required'],
             'opmerking' => ['nullable', 'string', 'max:255'],
@@ -110,6 +106,14 @@ class AfspraakController extends Controller
         ]);
 
         $data['is_actief'] = $request->boolean('is_actief');
+
+        if (strtotime($data['eind_tijd']) <= strtotime($data['start_tijd'])) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'eind_tijd' => 'De eindtijd mag niet eerder zijn dan de starttijd.'
+                ]);
+        }
 
         if ($this->hasOverlap(
             $data['medewerker_id'],
@@ -125,15 +129,9 @@ class AfspraakController extends Controller
 
         $result = $this->afspraakModel->spUpdateAfspraak($id, $data);
 
-        if ($result > 0) {
-            return redirect()
-                ->route('afspraken.index')
-                ->with('success', 'Afspraak succesvol gewijzigd');
-        }
-
-        return back()
-            ->withInput()
-            ->with('error', 'Afspraak kon niet worden gewijzigd');
+        return ($result > 0)
+            ? redirect()->route('afspraken.index')->with('success', 'Afspraak succesvol gewijzigd')
+            : back()->withInput()->with('error', 'Afspraak kon niet worden gewijzigd');
     }
 
     public function destroy(int $id): RedirectResponse

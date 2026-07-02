@@ -12,6 +12,7 @@
             </div>
 
             <a href="{{ route('afspraken.create') }}"
+               title="Nieuwe afspraak aanmaken"
                class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200">
                 Nieuwe afspraak
             </a>
@@ -42,6 +43,7 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-zinc-500">Datum</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-zinc-500">Tijd</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-zinc-500">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-zinc-500">Opmerking</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-zinc-500">Acties</th>
                         </tr>
                     </thead>
@@ -52,33 +54,38 @@
                             <tr>
 
                                 <td class="px-4 py-3 text-sm text-zinc-700 dark:text-zinc-200">
-                                    {{ $afspraak->Klant }}
+                                    {{ $afspraak->Klant ?? '-' }}
                                 </td>
 
                                 <td class="px-4 py-3 text-sm text-zinc-700 dark:text-zinc-200">
-                                    {{ $afspraak->Medewerker }}
+                                    {{ $afspraak->Medewerker ?? '-' }}
                                 </td>
 
                                 <td class="px-4 py-3 text-sm text-zinc-700 dark:text-zinc-200">
-                                    {{ $afspraak->Behandeling }}
+                                    {{ $afspraak->Behandeling ?? '-' }}
                                 </td>
 
                                 <td class="px-4 py-3 text-sm text-zinc-700 dark:text-zinc-200">
-                                    {{ $afspraak->Datum }}
+                                    {{ $afspraak->Datum ?? '-' }}
                                 </td>
 
                                 <td class="px-4 py-3 text-sm text-zinc-700 dark:text-zinc-200">
-                                    {{ $afspraak->StartTijd }} - {{ $afspraak->EindTijd }}
+                                    {{ $afspraak->StartTijd ?? '-' }} - {{ $afspraak->EindTijd ?? '-' }}
                                 </td>
 
                                 <td class="px-4 py-3 text-sm text-zinc-700 dark:text-zinc-200">
-                                    {{ $afspraak->Status }}
+                                    {{ $afspraak->Status ?? '-' }}
+                                </td>
+
+                                <td class="px-4 py-3 text-sm text-zinc-700 dark:text-zinc-200">
+                                    {{ $afspraak->Opmerking ?? '-' }}
                                 </td>
 
                                 <td class="px-4 py-3 text-right text-sm">
                                     <div class="flex justify-end gap-2">
 
                                         <a href="{{ route('afspraken.edit', $afspraak->Id) }}"
+                                           title="Afspraak wijzigen"
                                            class="rounded-lg border border-zinc-300 px-3 py-1.5 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800">
                                             Wijzigen
                                         </a>
@@ -91,6 +98,7 @@
                                             @method('DELETE')
 
                                             <button type="submit"
+                                                    title="Afspraak verwijderen"
                                                     class="rounded-lg border border-rose-300 px-3 py-1.5 text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/40">
                                                 Verwijderen
                                             </button>
@@ -103,7 +111,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-6 text-center text-sm text-zinc-500">
+                                <td colspan="8" class="px-4 py-6 text-center text-sm text-zinc-500">
                                     Geen afspraken gevonden
                                 </td>
                             </tr>
