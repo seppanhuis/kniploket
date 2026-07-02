@@ -40,14 +40,16 @@ class AfspraakController extends Controller
             'medewerker_id' => ['required', 'integer'],
             'behandeling_id' => ['required', 'integer'],
             'afspraak_status_id' => ['required', 'integer'],
-            'datum' => ['required', 'date'],
+
+            // 🔥 FIX: geen verleden afspraken
+            'datum' => ['required', 'date', 'after_or_equal:today'],
+
             'start_tijd' => ['required'],
             'eind_tijd' => ['required'],
             'opmerking' => ['nullable', 'string', 'max:255'],
             'is_actief' => ['nullable', 'boolean'],
         ]);
 
-        // ✔ checkbox fix
         $data['is_actief'] = $request->boolean('is_actief');
 
         if ($this->hasOverlap(
@@ -58,7 +60,7 @@ class AfspraakController extends Controller
         )) {
             return back()
                 ->withInput()
-                ->with('error', 'Deze medewerker heeft al een afspraak in dit tijdsblok');
+                ->with('error', 'Dit tijdstip is al in gebruik');
         }
 
         $result = $this->afspraakModel->spCreateAfspraak($data);
@@ -97,14 +99,16 @@ class AfspraakController extends Controller
             'medewerker_id' => ['required', 'integer'],
             'behandeling_id' => ['required', 'integer'],
             'afspraak_status_id' => ['required', 'integer'],
-            'datum' => ['required', 'date'],
+
+            // 🔥 FIX: geen verleden afspraken
+            'datum' => ['required', 'date', 'after_or_equal:today'],
+
             'start_tijd' => ['required'],
             'eind_tijd' => ['required'],
             'opmerking' => ['nullable', 'string', 'max:255'],
             'is_actief' => ['nullable', 'boolean'],
         ]);
 
-        // ✔ checkbox fix
         $data['is_actief'] = $request->boolean('is_actief');
 
         if ($this->hasOverlap(
@@ -116,7 +120,7 @@ class AfspraakController extends Controller
         )) {
             return back()
                 ->withInput()
-                ->with('error', 'Deze medewerker heeft al een afspraak in dit tijdsblok');
+                ->with('error', 'Dit tijdstip is al in gebruik');
         }
 
         $result = $this->afspraakModel->spUpdateAfspraak($id, $data);
@@ -140,7 +144,6 @@ class AfspraakController extends Controller
             return back()->with('error', 'Afspraak niet gevonden');
         }
 
-        // ❌ inactief = nooit verwijderen
         if ((int) $afspraak->IsActief === 0) {
             return back()->with('error', 'Inactieve afspraken kunnen niet verwijderd worden');
         }
