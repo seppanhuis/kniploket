@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -20,8 +21,12 @@ class ProductController extends Controller
     /** Show the overview page with all products, including inactive ones. */
     public function index()
     {
+       ;
+
         // Load every product for the index so inactive products remain visible.
         $products = $this->productModel->spGetAllProducten();
+
+        
 
         foreach ($products as $product) {
             $product->treatments = $this->productModel->spGetTreatmentsForProduct($product->Id);
@@ -40,6 +45,8 @@ class ProductController extends Controller
     /** Show the form for creating a new product. */
     public function create()
     {
+        Log::info('Product create form opened');
+
         return view('producten.create', [
             'title' => 'Nieuw product toevoegen',
             'categories' => DB::table('ProductCategorie')->where('IsActief', true)->orderBy('Naam')->get(),
@@ -65,8 +72,12 @@ class ProductController extends Controller
             'treatment_ids.*' => ['integer', 'exists:Behandeling,BehandelingId'],
         ]);
 
+        Log::info('Product create requested', ['product_name' => $data['product_naam']]);
+
         $productId = $this->productModel->spCreateProduct($data);
         $this->productModel->syncTreatmentsForProduct($productId, $request->input('treatment_ids', []));
+
+        Log::info('Product create completed', ['product_id' => $productId]);
 
         return redirect()->route('producten.index')
             ->with('success', 'Product succesvol toegevoegd.');
@@ -75,7 +86,11 @@ class ProductController extends Controller
     /** Show the form for editing an existing product. */
     public function edit($id)
     {
+        Log::info('Product edit requested', ['product_id' => $id]);
+
         $product = $this->productModel->spGetProductById($id);
+
+        Log::info('Product read for edit', ['product_id' => $id, 'found' => ! empty($product)]);
 
         abort_if(! $product, 404);
 
@@ -109,8 +124,12 @@ class ProductController extends Controller
             'treatment_ids.*' => ['integer', 'exists:Behandeling,BehandelingId'],
         ]);
 
+        Log::info('Product update requested', ['product_id' => $id, 'product_name' => $data['product_naam']]);
+
         $result = $this->productModel->spUpdateProduct($id, $data);
         $this->productModel->syncTreatmentsForProduct($id, $request->input('treatment_ids', []));
+
+        Log::info('Product update completed', ['product_id' => $id, 'result' => $result]);
 
         if ($result > 0) {
             return redirect()->route('producten.index')
@@ -120,17 +139,23 @@ class ProductController extends Controller
         return back()->withInput()->with('error', 'Product kon niet worden gewijzigd.');
     }
 
-    /** Disable a product instead of removing it from the database. */
+    /** Remove a product permanently from the database. */
     public function destroy($id)
     {
-        $updated = $this->productModel->spDeleteProduct($id);
+        Log::info('Product delete requested', ['product_id' => $id]);
 
-        if ($updated) {
+        $deleted = $this->productModel->spDeleteProduct($id);
+
+        Log::info('Product delete result', ['product_id' => $id, 'deleted' => $deleted]);
+
+        if ($deleted > 0) {
             return redirect()->route('producten.index')
-                ->with('error', 'Product is uitgeschakeld.');
+                ->with('success', 'Product is verwijderd.');
         }
 
+        Log::warning('Product delete did not remove any rows', ['product_id' => $id]);
+
         return redirect()->route('producten.index')
-            ->with('error', 'Product kon niet worden verwijderd.');
+            ->with('error', 'Product staat of is al inactief en kan niet worden verwijderd.');
     }
 }
