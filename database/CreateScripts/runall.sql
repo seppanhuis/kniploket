@@ -1336,6 +1336,7 @@ CREATE PROCEDURE sp_GetKlantById(
 BEGIN
     SELECT
         K.Id,
+        K.GebruikerId,
         G.Voornaam,
         G.Achternaam,
         G.Email,
