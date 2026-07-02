@@ -74,7 +74,7 @@ BEGIN
         B.DatumAangemaakt,
         B.DatumGewijzigd
     FROM Behandeling AS B
-    ORDER BY B.Naam ASC;
+    ORDER BY B.DatumGewijzigd DESC;
 END$$
 
 DELIMITER ;
