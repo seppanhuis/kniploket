@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Carbon\Carbon;
 
 class AfspraakController extends Controller
 {
@@ -35,30 +36,47 @@ class AfspraakController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // Validatie input
         $data = $request->validate([
             'klant_id' => ['required', 'integer'],
             'medewerker_id' => ['required', 'integer'],
             'behandeling_id' => ['required', 'integer'],
             'afspraak_status_id' => ['required', 'integer'],
-            'datum' => ['required', 'date', 'after_or_equal:today'],
-            'start_tijd' => ['required'],
-            'eind_tijd' => ['required'],
+
+            'datum' => ['required', 'date'],
+            'start_tijd' => ['required', 'date_format:H:i'],
+            'eind_tijd' => ['required', 'date_format:H:i'],
+
             'opmerking' => ['nullable', 'string', 'max:255'],
             'is_actief' => ['nullable', 'boolean'],
         ]);
 
         $data['is_actief'] = $request->boolean('is_actief');
 
-        // ✔ tijd check
-        if (strtotime($data['eind_tijd']) <= strtotime($data['start_tijd'])) {
+        // Combineer datum + tijd
+        $start = Carbon::createFromFormat('Y-m-d H:i', $data['datum'] . ' ' . $data['start_tijd']);
+        $eind  = Carbon::createFromFormat('Y-m-d H:i', $data['datum'] . ' ' . $data['eind_tijd']);
+        $nu    = Carbon::now();
+
+        // Geen afspraken in het verleden
+        if ($start->lt($nu)) {
             return back()
                 ->withInput()
                 ->withErrors([
-                    'eind_tijd' => 'De eindtijd mag niet eerder zijn dan de starttijd.'
+                    'start_tijd' => 'De starttijd mag niet eerder zijn dan het huidige tijdstip.'
                 ]);
         }
 
-        // ✔ overlap check
+        // Eindtijd moet na starttijd liggen
+        if ($eind->lte($start)) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'eind_tijd' => 'De eindtijd moet na de starttijd liggen.'
+                ]);
+        }
+
+        // Overlap check
         if ($this->hasOverlap(
             $data['medewerker_id'],
             $data['datum'],
@@ -67,42 +85,76 @@ class AfspraakController extends Controller
         )) {
             return back()
                 ->withInput()
-                ->with('error', 'Dit tijdstip is al in gebruik');
+                ->with('error', 'Dit tijdslot is al bezet.');
         }
 
+        // Opslaan
         $result = $this->afspraakModel->spCreateAfspraak($data);
 
         return ($result && $result->new_id)
             ? redirect()->route('afspraken.index')->with('success', 'Afspraak succesvol toegevoegd')
-            : back()->withInput()->with('error', 'Afspraak kon niet worden toegevoegd');
+            : back()->withInput()->with('error', 'Afspraak kon niet worden opgeslagen.');
+    }
+
+    public function edit(int $id): View
+    {
+        $afspraak = $this->afspraakModel->spGetAfspraakById($id);
+
+        abort_if(! $afspraak, 404);
+
+        return view('afspraken.edit', [
+            'title' => 'Afspraak wijzigen',
+            'afspraak' => $afspraak,
+            'klanten' => $this->getKlanten(),
+            'medewerkers' => $this->getMedewerkers(),
+            'behandelingen' => $this->getBehandelingen(),
+            'statussen' => $this->getStatussen(),
+        ]);
     }
 
     public function update(Request $request, int $id): RedirectResponse
     {
+        // Validatie input
         $data = $request->validate([
             'klant_id' => ['required', 'integer'],
             'medewerker_id' => ['required', 'integer'],
             'behandeling_id' => ['required', 'integer'],
             'afspraak_status_id' => ['required', 'integer'],
-            'datum' => ['required', 'date', 'after_or_equal:today'],
-            'start_tijd' => ['required'],
-            'eind_tijd' => ['required'],
+
+            'datum' => ['required', 'date'],
+            'start_tijd' => ['required', 'date_format:H:i'],
+            'eind_tijd' => ['required', 'date_format:H:i'],
+
             'opmerking' => ['nullable', 'string', 'max:255'],
             'is_actief' => ['nullable', 'boolean'],
         ]);
 
         $data['is_actief'] = $request->boolean('is_actief');
 
-        // ✔ tijd check
-        if (strtotime($data['eind_tijd']) <= strtotime($data['start_tijd'])) {
+        // Combineer datum + tijd
+        $start = Carbon::createFromFormat('Y-m-d H:i', $data['datum'] . ' ' . $data['start_tijd']);
+        $eind  = Carbon::createFromFormat('Y-m-d H:i', $data['datum'] . ' ' . $data['eind_tijd']);
+        $nu    = Carbon::now();
+
+        // Geen afspraken in het verleden
+        if ($start->lt($nu)) {
             return back()
                 ->withInput()
                 ->withErrors([
-                    'eind_tijd' => 'De eindtijd mag niet eerder zijn dan de starttijd.'
+                    'start_tijd' => 'De starttijd mag niet eerder zijn dan het huidige tijdstip.'
                 ]);
         }
 
-        // ✔ overlap check
+        // Eindtijd moet na starttijd liggen
+        if ($eind->lte($start)) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'eind_tijd' => 'De eindtijd moet na de starttijd liggen.'
+                ]);
+        }
+
+        // Overlap check (exclusief huidige afspraak)
         if ($this->hasOverlap(
             $data['medewerker_id'],
             $data['datum'],
@@ -112,14 +164,15 @@ class AfspraakController extends Controller
         )) {
             return back()
                 ->withInput()
-                ->with('error', 'Dit tijdstip is al in gebruik');
+                ->with('error', 'Dit tijdslot is al bezet.');
         }
 
+        // Update uitvoeren
         $result = $this->afspraakModel->spUpdateAfspraak($id, $data);
 
         return ($result > 0)
             ? redirect()->route('afspraken.index')->with('success', 'Afspraak succesvol gewijzigd')
-            : back()->withInput()->with('error', 'Afspraak kon niet worden gewijzigd');
+            : back()->withInput()->with('error', 'Afspraak kon niet worden gewijzigd.');
     }
 
     public function destroy(int $id): RedirectResponse
@@ -131,14 +184,14 @@ class AfspraakController extends Controller
         }
 
         if ((int) $afspraak->IsActief === 0) {
-            return back()->with('error', 'Inactieve afspraken kunnen niet verwijderd worden');
+            return back()->with('error', 'Inactieve afspraken kunnen niet worden verwijderd');
         }
 
         $result = $this->afspraakModel->spDeleteAfspraak($id);
 
         return ($result > 0)
             ? redirect()->route('afspraken.index')->with('success', 'Afspraak verwijderd')
-            : back()->with('error', 'Kon afspraak niet verwijderen');
+            : back()->with('error', 'Afspraak kon niet worden verwijderd.');
     }
 
     private function hasOverlap($medewerkerId, $datum, $start, $eind, $ignoreId = null): bool

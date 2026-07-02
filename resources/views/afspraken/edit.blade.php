@@ -10,22 +10,10 @@
             </p>
         </div>
 
-        {{-- ✅ SUCCES / ERROR --}}
-        @if (session('error'))
-            <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
-                {{ session('error') }}
-            </div>
-        @endif
-
-        @if (session('success'))
-            <div class="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-900/60 dark:bg-green-950/40 dark:text-green-200">
-                {{ session('success') }}
-            </div>
-        @endif
-
+        {{-- ERRORS --}}
         @if ($errors->any())
-            <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
-                <ul class="list-disc space-y-1 pl-5">
+            <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                <ul class="list-disc pl-5">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
@@ -35,7 +23,7 @@
 
         <form method="POST"
               action="{{ route('afspraken.update', $afspraak->Id) }}"
-              class="max-w-3xl rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              class="max-w-3xl rounded-2xl border bg-white p-6">
 
             @csrf
             @method('PUT')
@@ -47,7 +35,7 @@
                     <select name="klant_id" class="w-full border p-2">
                         @foreach($klanten as $klant)
                             <option value="{{ $klant->Id }}"
-                                {{ old('klant_id', $afspraak->KlantId) == $klant->Id ? 'selected' : '' }}>
+                                @selected(old('klant_id', $afspraak->KlantId) == $klant->Id)>
                                 {{ $klant->Naam }}
                             </option>
                         @endforeach
@@ -59,7 +47,7 @@
                     <select name="medewerker_id" class="w-full border p-2">
                         @foreach($medewerkers as $medewerker)
                             <option value="{{ $medewerker->Id }}"
-                                {{ old('medewerker_id', $afspraak->MedewerkerId) == $medewerker->Id ? 'selected' : '' }}>
+                                @selected(old('medewerker_id', $afspraak->MedewerkerId) == $medewerker->Id)>
                                 {{ $medewerker->Naam }}
                             </option>
                         @endforeach
@@ -71,7 +59,7 @@
                     <select name="behandeling_id" class="w-full border p-2">
                         @foreach($behandelingen as $behandeling)
                             <option value="{{ $behandeling->BehandelingId }}"
-                                {{ old('behandeling_id', $afspraak->BehandelingId) == $behandeling->BehandelingId ? 'selected' : '' }}>
+                                @selected(old('behandeling_id', $afspraak->BehandelingId) == $behandeling->BehandelingId)>
                                 {{ $behandeling->Naam }}
                             </option>
                         @endforeach
@@ -83,7 +71,7 @@
                     <select name="afspraak_status_id" class="w-full border p-2">
                         @foreach($statussen as $status)
                             <option value="{{ $status->Id }}"
-                                {{ old('afspraak_status_id', $afspraak->AfspraakStatusId) == $status->Id ? 'selected' : '' }}>
+                                @selected(old('afspraak_status_id', $afspraak->AfspraakStatusId) == $status->Id)>
                                 {{ $status->Naam }}
                             </option>
                         @endforeach
@@ -93,29 +81,30 @@
                 <div>
                     <label>Datum</label>
                     <input type="date" name="datum"
-                           value="{{ old('datum', \Carbon\Carbon::parse($afspraak->Datum)->format('Y-m-d')) }}"
-                           class="w-full border p-2">
+                        value="{{ old('datum', \Carbon\Carbon::parse($afspraak->Datum)->format('Y-m-d')) }}"
+                        class="w-full border p-2">
                 </div>
 
+                {{-- 🔥 FIX HIER --}}
                 <div>
                     <label>Starttijd</label>
                     <input type="time" name="start_tijd"
-                           value="{{ old('start_tijd', $afspraak->StartTijd) }}"
-                           class="w-full border p-2">
+                        value="{{ old('start_tijd', \Carbon\Carbon::parse($afspraak->StartTijd)->format('H:i')) }}"
+                        class="w-full border p-2">
                 </div>
 
                 <div>
                     <label>Eindtijd</label>
                     <input type="time" name="eind_tijd"
-                           value="{{ old('eind_tijd', $afspraak->EindTijd) }}"
-                           class="w-full border p-2">
+                        value="{{ old('eind_tijd', \Carbon\Carbon::parse($afspraak->EindTijd)->format('H:i')) }}"
+                        class="w-full border p-2">
                 </div>
 
                 <div>
                     <label>Opmerking</label>
                     <input type="text" name="opmerking"
-                           value="{{ old('opmerking', $afspraak->Opmerking) }}"
-                           class="w-full border p-2">
+                        value="{{ old('opmerking', $afspraak->Opmerking) }}"
+                        class="w-full border p-2">
                 </div>
 
                 <div class="md:col-span-2">
