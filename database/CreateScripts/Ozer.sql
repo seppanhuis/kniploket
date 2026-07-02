@@ -13,13 +13,16 @@ BEGIN
         p.Opmerking,
         p.LeverancierId,
         p.CategorieId,
+        p.DatumAangemaakt,
+        p.DatumGewijzigd,
         l.Naam AS leverancier_naam,
         c.Naam AS categorie_naam
     FROM Product AS p
     LEFT JOIN Leverancier AS l ON l.Id = p.LeverancierId
     LEFT JOIN ProductCategorie AS c ON c.Id = p.CategorieId
-    ORDER BY p.ProductNaam DESC;
+    ORDER BY COALESCE(p.DatumGewijzigd, p.DatumAangemaakt) DESC;
 END$$
+
 
 DROP PROCEDURE IF EXISTS sp_CreateProduct$$
 CREATE PROCEDURE sp_CreateProduct(
@@ -60,6 +63,7 @@ BEGIN
     SELECT LAST_INSERT_ID() AS new_id;
 END$$
 
+
 DROP PROCEDURE IF EXISTS sp_GetProductById$$
 CREATE PROCEDURE sp_GetProductById(
     IN p_id INT
@@ -78,6 +82,7 @@ BEGIN
     FROM Product AS p
     WHERE p.Id = p_id;
 END$$
+
 
 DROP PROCEDURE IF EXISTS sp_UpdateProduct$$
 CREATE PROCEDURE sp_UpdateProduct(
@@ -108,21 +113,12 @@ BEGIN
     SELECT ROW_COUNT() AS affected;
 END$$
 
+
 DROP PROCEDURE IF EXISTS sp_DeleteProduct$$
 CREATE PROCEDURE sp_DeleteProduct(
     IN p_id INT
 )
 BEGIN
-    SELECT CASE
-        WHEN EXISTS (
-            SELECT 1
-            FROM Product
-            WHERE Id = p_id
-              AND IsActief = 1
-        ) THEN 1
-        ELSE 0
-    END AS affected;
-
     IF EXISTS (
         SELECT 1
         FROM Product
@@ -141,6 +137,7 @@ BEGIN
 
     SELECT ROW_COUNT() AS affected;
 END$$
+
 
 DROP PROCEDURE IF EXISTS sp_GetTreatmentsForProduct$$
 CREATE PROCEDURE sp_GetTreatmentsForProduct(

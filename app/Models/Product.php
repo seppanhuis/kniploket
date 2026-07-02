@@ -28,29 +28,25 @@ class Product extends Model
         'DatumGewijzigd',
     ];
 
-    /** Retrieve all products for the overview page, including inactive products. */
+    /** Retrieve all products for the overview page via the stored procedure. */
     public function spGetAllProducten()
     {
-        return collect(
-            DB::table('Product as p')
-                ->select(
-                    'p.Id',
-                    'p.ProductNaam',
-                    'p.EANCode',
-                    'p.Voorraad',
-                    'p.MinimumVoorraad',
-                    'p.IsActief',
-                    'p.Opmerking',
-                    'p.LeverancierId',
-                    'p.CategorieId',
-                    'l.Naam as leverancier_naam',
-                    'c.Naam as categorie_naam'
-                )
-                ->leftJoin('Leverancier as l', 'l.Id', '=', 'p.LeverancierId')
-                ->leftJoin('ProductCategorie as c', 'c.Id', '=', 'p.CategorieId')
-                ->orderBy('p.ProductNaam')
-                ->get()
-        );
+        try {
+            $products = collect(DB::select('CALL sp_GetAllProducten()'));
+
+            return $products->sortByDesc(function ($product) {
+                $dates = array_filter([
+                    $product->DatumGewijzigd ? strtotime($product->DatumGewijzigd) : null,
+                    $product->DatumAangemaakt ? strtotime($product->DatumAangemaakt) : null,
+                ]);
+
+                return $dates ? max($dates) : 0;
+            })->values();
+        } catch (\Throwable $e) {
+            Log::warning('sp_GetAllProducten failed', ['reason' => $e->getMessage()]);
+
+            return collect();
+        }
     }
 
     /** Create a new product through the stored procedure and fall back to Eloquent if needed. */
@@ -133,34 +129,18 @@ class Product extends Model
         }
     }
 
-    /** Permanently delete a product only when it is still active. */
+    /** Permanently delete a product through the stored procedure. */
     public function spDeleteProduct($id)
     {
-        $product = DB::table('Product')->where('Id', $id)->first();
-
-        if (! $product || (int) $product->IsActief !== 1) {
-            Log::info('Product delete skipped because it is already inactive', ['product_id' => $id]);
-
-            return 0;
-        }
-
         try {
-            return DB::transaction(function () use ($id) {
-                $removedTreatmentLinks = DB::table('BehandelingProduct')->where('ProductId', $id)->delete();
-                $removedOrderLines = DB::table('Bestelregel')->where('ProductId', $id)->delete();
-                $deleted = DB::table('Product')->where('Id', $id)->delete();
+            $row = DB::selectOne('CALL sp_DeleteProduct(:id)', ['id' => $id]);
+            $affected = (int) ($row->affected ?? 0);
 
-                Log::info('Product delete executed', [
-                    'product_id' => $id,
-                    'deleted' => $deleted,
-                    'removed_treatment_links' => $removedTreatmentLinks,
-                    'removed_order_lines' => $removedOrderLines,
-                ]);
+            Log::info('Product delete procedure executed', ['product_id' => $id, 'affected' => $affected]);
 
-                return (int) $deleted;
-            });
+            return $affected;
         } catch (\Throwable $e) {
-            Log::warning('Product delete failed', ['product_id' => $id, 'reason' => $e->getMessage()]);
+            Log::warning('Product delete procedure failed', ['product_id' => $id, 'reason' => $e->getMessage()]);
 
             return 0;
         }
