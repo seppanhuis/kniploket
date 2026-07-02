@@ -12,6 +12,11 @@ class Klant extends Model
 {
     protected $table = 'Klant';
 
+    private function normalizeHuisnummer(mixed $huisnummer): int
+    {
+        return (int) ($huisnummer ?? 0);
+    }
+
     protected $primaryKey = 'Id';
 
     public $incrementing = true;
@@ -41,6 +46,8 @@ class Klant extends Model
 
     public function spCreateKlant(array $data): object
     {
+        $data['huisnummer'] = $this->normalizeHuisnummer($data['huisnummer'] ?? null);
+
         try {
             Log::info('Klant aanmaken via stored procedure', [
                 'email' => $data['email'] ?? null
@@ -94,7 +101,7 @@ class Klant extends Model
                 'Voornaam' => $data['voornaam'],
                 'Achternaam' => $data['achternaam'],
                 'Straat' => $data['straat'],
-                'Huisnummer' => (int) $data['huisnummer'],
+                'Huisnummer' => $data['huisnummer'],
                 'Toevoeging' => $data['toevoeging'],
                 'Postcode' => $data['postcode'],
                 'Woonplaats' => $data['woonplaats'],
@@ -166,6 +173,8 @@ class Klant extends Model
 
     public function spUpdateKlant(int $id, array $data): int
     {
+        $data['huisnummer'] = $this->normalizeHuisnummer($data['huisnummer'] ?? null);
+
         try {
             Log::info('Klant updaten via procedure', [
                 'id' => $id

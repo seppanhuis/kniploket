@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 describe('klant crud', function (): void {
@@ -16,7 +17,7 @@ describe('klant crud', function (): void {
             $table->string('Voornaam');
             $table->string('Achternaam');
             $table->string('Straat');
-            $table->string('Huisnummer');
+            $table->integer('Huisnummer');
             $table->string('Toevoeging')->nullable();
             $table->string('Postcode');
             $table->string('Woonplaats');
@@ -66,6 +67,47 @@ describe('klant crud', function (): void {
         $response->assertSessionHas('success', 'klant succesvol toegevoegd');
         $this->assertDatabaseHas('Gebruiker', ['Email' => 'jan@example.com']);
         $this->assertDatabaseHas('Klant', ['Opmerking' => 'Test klant']);
+    });
+
+    it('stores the huisnummer as an integer when updating a klant', function (): void {
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        $this->post(route('klanten.store'), [
+            'voornaam' => 'Jan',
+            'achternaam' => 'Smit',
+            'email' => 'jan@example.com',
+            'telefoonnummer' => '0612345678',
+            'wensen' => 'Licht',
+            'opmerking' => 'Test klant',
+            'straat' => 'Hoofdstraat',
+            'huisnummer' => '12',
+            'toevoeging' => '',
+            'postcode' => '1234AB',
+            'woonplaats' => 'Utrecht',
+            'is_actief' => true,
+        ]);
+
+        $klantId = DB::table('Klant')->value('Id');
+
+        $response = $this->put(route('klanten.update', $klantId), [
+            'voornaam' => 'Jan',
+            'achternaam' => 'Smit',
+            'email' => 'jan@example.com',
+            'telefoonnummer' => '0612345678',
+            'wensen' => 'Licht',
+            'opmerking' => 'Test klant',
+            'straat' => 'Hoofdstraat',
+            'huisnummer' => '34',
+            'toevoeging' => '',
+            'postcode' => '1234AB',
+            'woonplaats' => 'Utrecht',
+            'is_actief' => true,
+        ]);
+
+        $response->assertRedirect(route('klanten.index'));
+        $this->assertSame(34, (int) DB::table('Gebruiker')->where('Email', 'jan@example.com')->value('Huisnummer'));
     });
 
     it('creates a unique username when the base username already exists', function (): void {

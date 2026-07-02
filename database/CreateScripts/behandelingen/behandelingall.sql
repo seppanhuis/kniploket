@@ -1,5 +1,3 @@
-use kniploket;
-
 DROP PROCEDURE IF EXISTS sp_CreateBehandeling;
 
 DELIMITER $$
@@ -18,8 +16,7 @@ BEGIN
     ) THEN
         SELECT 'exists' AS status, 0 AS new_id;
     ELSE
-        INSERT INTO Behandeling
-        (
+        INSERT INTO Behandeling (
             Naam,
             Prijs,
             DuurMinuten,
@@ -28,8 +25,7 @@ BEGIN
             DatumAangemaakt,
             DatumGewijzigd
         )
-        VALUES
-        (
+        VALUES (
             p_naam,
             p_prijs,
             p_duur_minuten,
@@ -45,6 +41,23 @@ END$$
 
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS sp_DeleteBehandeling;
+
+DELIMITER $$
+
+CREATE PROCEDURE sp_DeleteBehandeling(
+    IN p_id INT
+)
+BEGIN
+    DELETE FROM Behandeling
+    WHERE BehandelingId = p_id;
+
+    SELECT 'deleted' AS status, ROW_COUNT() AS affected;
+END$$
+
+DELIMITER ;
+
+
 DROP PROCEDURE IF EXISTS sp_GetAllBehandelingen;
 
 DELIMITER $$
@@ -56,35 +69,15 @@ BEGIN
         B.Naam,
         B.Prijs,
         B.DuurMinuten,
+        B.IsActief,
         B.Opmerking,
-        B.IsActief
+        B.DatumAangemaakt,
+        B.DatumGewijzigd
     FROM Behandeling AS B
-    WHERE B.IsActief = 1
     ORDER BY B.Naam ASC;
 END$$
 
 DELIMITER ;
-
-DROP PROCEDURE IF EXISTS sp_GetAllBehandelingen;
-
-DELIMITER $$
-
-CREATE PROCEDURE sp_GetAllBehandelingen()
-BEGIN
-    SELECT
-        B.BehandelingId,
-        B.Naam,
-        B.Prijs,
-        B.DuurMinuten,
-        B.Opmerking,
-        B.IsActief
-    FROM Behandeling AS B
-    WHERE B.IsActief = 1
-    ORDER BY B.Naam ASC;
-END$$
-
-DELIMITER ;
-
 
 DROP PROCEDURE IF EXISTS sp_GetBehandelingById;
 
@@ -117,6 +110,7 @@ CREATE PROCEDURE sp_UpdateBehandeling(
     IN p_naam VARCHAR(100),
     IN p_prijs DECIMAL(6,2),
     IN p_duur_minuten SMALLINT UNSIGNED,
+    IN p_is_actief TINYINT(1),
     IN p_opmerking VARCHAR(255)
 )
 BEGIN
@@ -133,6 +127,7 @@ BEGIN
             Naam = p_naam,
             Prijs = p_prijs,
             DuurMinuten = p_duur_minuten,
+            IsActief = p_is_actief,
             Opmerking = p_opmerking,
             DatumGewijzigd = SYSDATE(6)
         WHERE BehandelingId = p_id;

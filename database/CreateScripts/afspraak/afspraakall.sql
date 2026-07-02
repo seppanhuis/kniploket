@@ -1,5 +1,3 @@
-use kniploket;
-
 DROP PROCEDURE IF EXISTS sp_CreateAfspraak;
 
 DELIMITER $$
@@ -17,7 +15,7 @@ CREATE PROCEDURE sp_CreateAfspraak(
 )
 BEGIN
 
-    
+
     IF EXISTS (
         SELECT 1
         FROM Afspraak
@@ -110,6 +108,7 @@ END$$
 
 DELIMITER ;
 
+
 DROP PROCEDURE IF EXISTS sp_GetAllAfspraken;
 
 DELIMITER $$
@@ -187,7 +186,7 @@ BEGIN
         SET MESSAGE_TEXT = 'Medewerker heeft al een afspraak in deze tijdsperiode';
     END IF;
 
-    
+
     UPDATE Afspraak
     SET
         KlantId = p_klantId,
