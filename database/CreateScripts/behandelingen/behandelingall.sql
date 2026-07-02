@@ -49,10 +49,32 @@ CREATE PROCEDURE sp_DeleteBehandeling(
     IN p_id INT
 )
 BEGIN
-    DELETE FROM Behandeling
-    WHERE BehandelingId = p_id;
+    IF EXISTS (
+        SELECT 1
+        FROM Behandeling
+        WHERE BehandelingId = p_id
+          AND IsActief = 0
+    ) THEN
 
-    SELECT 'deleted' AS status, ROW_COUNT() AS affected;
+        SELECT 'inactive' AS status, 0 AS affected;
+
+    ELSE
+
+        DELETE FROM Afspraak
+        WHERE BehandelingId = p_id;
+
+        DELETE FROM BehandelingProduct
+        WHERE BehandelingId = p_id;
+
+        DELETE FROM BehandelingSpecialisatie
+        WHERE BehandelingId = p_id;
+
+        DELETE FROM Behandeling
+        WHERE BehandelingId = p_id;
+
+        SELECT 'deleted' AS status, ROW_COUNT() AS affected;
+
+    END IF;
 END$$
 
 DELIMITER ;
