@@ -69,7 +69,7 @@ class Product extends Model
 
             return (int) ($row->new_id ?? 0);
         } catch (\Throwable $e) {
-            return (int) DB::table('Product')->insertGetId([
+            return (int) static::query()->insertGetId([
                 'ProductNaam' => $data['product_naam'],
                 'EANCode' => $data['ean_code'],
                 'Voorraad' => $data['voorraad'],
@@ -90,7 +90,7 @@ class Product extends Model
         try {
             return DB::selectOne('CALL sp_GetProductById(:id)', ['id' => $id]);
         } catch (\Throwable $e) {
-            return DB::table('Product')->where('Id', $id)->first();
+            return static::query()->where('Id', $id)->first();
         }
     }
 
@@ -115,7 +115,7 @@ class Product extends Model
 
             return (int) ($row->affected ?? 0);
         } catch (\Throwable $e) {
-            return (int) DB::table('Product')->where('Id', $id)->update([
+            return (int) static::query()->where('Id', $id)->update([
                 'ProductNaam' => $data['product_naam'],
                 'EANCode' => $data['ean_code'],
                 'Voorraad' => $data['voorraad'],
@@ -154,46 +154,78 @@ class Product extends Model
 
             return collect($rows)->pluck('Naam');
         } catch (\Throwable $e) {
-            return DB::table('BehandelingProduct as bp')
-                ->join('Behandeling as b', 'b.BehandelingId', '=', 'bp.BehandelingId')
-                ->where('bp.ProductId', $productId)
-                ->where('bp.IsActief', true)
-                ->pluck('b.Naam');
+            Log::warning('sp_GetTreatmentsForProduct failed', ['product_id' => $productId, 'reason' => $e->getMessage()]);
+
+            return collect();
+        }
+    }
+
+    /** Return the active categories for product forms. */
+    public function spGetActiveCategories()
+    {
+        try {
+            return collect(DB::select('CALL sp_GetActiveProductCategories()'));
+        } catch (\Throwable $e) {
+            Log::warning('sp_GetActiveProductCategories failed', ['reason' => $e->getMessage()]);
+
+            return collect();
+        }
+    }
+
+    /** Return the active suppliers for product forms. */
+    public function spGetActiveSuppliers()
+    {
+        try {
+            return collect(DB::select('CALL sp_GetActiveSuppliers()'));
+        } catch (\Throwable $e) {
+            Log::warning('sp_GetActiveSuppliers failed', ['reason' => $e->getMessage()]);
+
+            return collect();
+        }
+    }
+
+    /** Return the active treatments for product forms. */
+    public function spGetActiveTreatments()
+    {
+        try {
+            return collect(DB::select('CALL sp_GetActiveTreatments()'));
+        } catch (\Throwable $e) {
+            Log::warning('sp_GetActiveTreatments failed', ['reason' => $e->getMessage()]);
+
+            return collect();
         }
     }
 
     /** Return the active treatment ids currently linked to a product. */
     public function spGetTreatmentIdsForProduct($productId)
     {
-        return collect(DB::table('BehandelingProduct')
-            ->where('ProductId', $productId)
-            ->where('IsActief', true)
-            ->pluck('BehandelingId'));
+        try {
+            $rows = DB::select('CALL sp_GetTreatmentIdsForProduct(:id)', ['id' => $productId]);
+
+            return collect($rows)->pluck('BehandelingId');
+        } catch (\Throwable $e) {
+            Log::warning('sp_GetTreatmentIdsForProduct failed', ['product_id' => $productId, 'reason' => $e->getMessage()]);
+
+            return collect();
+        }
     }
 
     /** Synchronize the treatments linked to a product by activating the selected ones. */
     public function syncTreatmentsForProduct($productId, array $treatmentIds = [])
     {
-        DB::table('BehandelingProduct')->where('ProductId', $productId)->update([
-            'IsActief' => false,
-            'DatumGewijzigd' => now(),
-        ]);
+        try {
+            $payload = json_encode(array_values(array_unique(array_filter($treatmentIds))));
 
-        foreach (array_unique(array_filter($treatmentIds)) as $treatmentId) {
-            DB::table('BehandelingProduct')->updateOrInsert(
-                [
-                    'ProductId' => $productId,
-                    'BehandelingId' => $treatmentId,
-                ],
-                [
-                    'Aantal' => 1,
-                    'IsActief' => true,
-                    'DatumAangemaakt' => now(),
-                    'DatumGewijzigd' => now(),
-                ]
-            );
+            DB::select('CALL sp_SyncTreatmentsForProduct(:product_id, :treatment_ids)', [
+                'product_id' => $productId,
+                'treatment_ids' => $payload,
+            ]);
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::warning('sp_SyncTreatmentsForProduct failed', ['product_id' => $productId, 'reason' => $e->getMessage()]);
+
+            return false;
         }
-
-        return true;
     }
 }

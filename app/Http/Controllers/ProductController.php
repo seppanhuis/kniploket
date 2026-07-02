@@ -25,7 +25,7 @@ class ProductController extends Controller
             $product->low_stock = $product->Voorraad <= $product->MinimumVoorraad;
         }
 
-        $lowStockProducts = collect($products)->filter(fn ($product) => $product->low_stock);
+        $lowStockProducts = collect($products)->filter(fn($product) => $product->low_stock);
 
         return view('producten.index', [
             'title' => 'Producten',
@@ -40,9 +40,9 @@ class ProductController extends Controller
 
         return view('producten.create', [
             'title' => 'Nieuw product toevoegen',
-            'categories' => DB::table('ProductCategorie')->where('IsActief', true)->orderBy('Naam')->get(),
-            'suppliers' => DB::table('Leverancier')->where('IsActief', true)->orderBy('Naam')->get(),
-            'treatments' => DB::table('Behandeling')->where('IsActief', true)->orderBy('Naam')->get(),
+            'categories' => $this->productModel->spGetActiveCategories(),
+            'suppliers' => $this->productModel->spGetActiveSuppliers(),
+            'treatments' => $this->productModel->spGetActiveTreatments(),
             'selectedTreatmentIds' => old('treatment_ids', []),
         ]);
     }
@@ -119,9 +119,9 @@ class ProductController extends Controller
         return view('producten.edit', [
             'title' => 'Product wijzigen',
             'product' => $product,
-            'categories' => DB::table('ProductCategorie')->where('IsActief', true)->orderBy('Naam')->get(),
-            'suppliers' => DB::table('Leverancier')->where('IsActief', true)->orderBy('Naam')->get(),
-            'treatments' => DB::table('Behandeling')->where('IsActief', true)->orderBy('Naam')->get(),
+            'categories' => $this->productModel->spGetActiveCategories(),
+            'suppliers' => $this->productModel->spGetActiveSuppliers(),
+            'treatments' => $this->productModel->spGetActiveTreatments(),
             'selectedTreatmentIds' => $this->productModel->spGetTreatmentIdsForProduct($id)->toArray(),
         ]);
     }
@@ -134,16 +134,16 @@ class ProductController extends Controller
 
         $data = $request->validate(
             [
-                'product_naam' => ['required', 'string', 'max:100', 'unique:Product,ProductNaam,'.$id.',Id'],
-                'ean_code' => ['required', 'digits_between:1,13', 'unique:Product,EANCode,'.$id.',Id'],
-                'voorraad' => ['required', 'integer', 'min:0'],
-                'minimum_voorraad' => ['required', 'integer', 'min:0'],
-                'leverancier_id' => ['required', 'exists:Leverancier,Id'],
-                'categorie_id' => ['required', 'exists:ProductCategorie,Id'],
-                'is_actief' => ['required', 'boolean'],
-                'opmerking' => ['nullable', 'string', 'max:255'],
-                'treatment_ids' => ['nullable', 'array'],
-                'treatment_ids.*' => ['integer', 'exists:Behandeling,BehandelingId'],
+                'product_naam' => ['required', 'string', 'max:100', 'unique:Product,ProductNaam,' . $id . ',Id']
+                ,'ean_code' => ['required', 'digits_between:1,13', 'unique:Product,EANCode,' . $id . ',Id']
+                ,'voorraad' => ['required', 'integer', 'min:0', 'max:65535']
+                ,'minimum_voorraad' => ['required', 'integer', 'min:0', 'max:65535']
+                ,'leverancier_id' => ['required', 'exists:Leverancier,Id']
+                ,'categorie_id' => ['required', 'exists:ProductCategorie,Id']
+                ,'is_actief' => ['required', 'boolean']
+                ,'opmerking' => ['nullable', 'string', 'max:255']
+                ,'treatment_ids' => ['nullable', 'array']
+                ,'treatment_ids.*' => ['integer', 'exists:Behandeling,BehandelingId']
             ],
             [
                 'product_naam.required' => 'Productnaam is verplicht.',
