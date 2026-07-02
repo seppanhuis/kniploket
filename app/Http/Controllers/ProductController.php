@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
-    /** @var Product */
     protected Product $productModel;
 
     public function __construct()
@@ -17,7 +16,6 @@ class ProductController extends Controller
         $this->productModel = new Product();
     }
 
-    /** Overzicht van alle producten inclusief inactieve */
     public function index()
     {
         $products = $this->productModel->spGetAllProducten();
@@ -36,7 +34,6 @@ class ProductController extends Controller
         ]);
     }
 
-    /** Formulier voor nieuw product */
     public function create()
     {
         Log::info('Product aanmaakformulier geopend');
@@ -50,21 +47,49 @@ class ProductController extends Controller
         ]);
     }
 
-    /** Opslaan van nieuw product */
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'product_naam' => ['required', 'string', 'max:100', 'unique:Product,ProductNaam'],
-            'ean_code' => ['required', 'digits_between:1,13', 'unique:Product,EANCode'],
-            'voorraad' => ['required', 'integer', 'min:0'],
-            'minimum_voorraad' => ['required', 'integer', 'min:0'],
-            'leverancier_id' => ['required', 'exists:Leverancier,Id'],
-            'categorie_id' => ['required', 'exists:ProductCategorie,Id'],
-            'is_actief' => ['required', 'boolean'],
-            'opmerking' => ['nullable', 'string', 'max:255'],
-            'treatment_ids' => ['nullable', 'array'],
-            'treatment_ids.*' => ['integer', 'exists:Behandeling,BehandelingId'],
-        ]);
+        $data = $request->validate(
+            [
+                'product_naam' => ['required', 'string', 'max:100', 'unique:Product,ProductNaam'],
+                'ean_code' => ['required', 'digits_between:1,13', 'unique:Product,EANCode'],
+                'voorraad' => ['required', 'integer', 'min:0'],
+                'minimum_voorraad' => ['required', 'integer', 'min:0'],
+                'leverancier_id' => ['required', 'exists:Leverancier,Id'],
+                'categorie_id' => ['required', 'exists:ProductCategorie,Id'],
+                'is_actief' => ['required', 'boolean'],
+                'opmerking' => ['nullable', 'string', 'max:255'],
+                'treatment_ids' => ['nullable', 'array'],
+                'treatment_ids.*' => ['integer', 'exists:Behandeling,BehandelingId'],
+            ],
+            [
+                'product_naam.required' => 'Productnaam is verplicht.',
+                'product_naam.unique' => 'Deze productnaam bestaat al.',
+
+                'ean_code.required' => 'EAN-code is verplicht.',
+                'ean_code.unique' => 'Deze EAN-code bestaat al.',
+                'ean_code.digits_between' => 'EAN-code moet tussen 1 en 13 cijfers zijn.',
+
+                'voorraad.required' => 'Voorraad is verplicht.',
+                'voorraad.integer' => 'Voorraad moet een geheel getal zijn.',
+                'voorraad.min' => 'Voorraad mag niet negatief zijn.',
+
+                'minimum_voorraad.required' => 'Minimum voorraad is verplicht.',
+                'minimum_voorraad.integer' => 'Minimum voorraad moet een geheel getal zijn.',
+                'minimum_voorraad.min' => 'Minimum voorraad mag niet negatief zijn.',
+
+                'leverancier_id.required' => 'Leverancier is verplicht.',
+                'leverancier_id.exists' => 'Geselecteerde leverancier bestaat niet.',
+
+                'categorie_id.required' => 'Categorie is verplicht.',
+                'categorie_id.exists' => 'Geselecteerde categorie bestaat niet.',
+
+                'is_actief.required' => 'Status is verplicht.',
+                'is_actief.boolean' => 'Status moet waar of onwaar zijn.',
+
+                'treatment_ids.*.exists' => 'Geselecteerde behandeling bestaat niet.',
+            ]
+        );
 
         Log::info('Nieuw product aangemaakt', [
             'product_naam' => $data['product_naam']
@@ -81,7 +106,6 @@ class ProductController extends Controller
             ->with('success', 'Product is succesvol toegevoegd.');
     }
 
-    /** Bewerken formulier */
     public function edit($id)
     {
         Log::info('Product bewerkverzoek ontvangen', [
@@ -89,11 +113,6 @@ class ProductController extends Controller
         ]);
 
         $product = $this->productModel->spGetProductById($id);
-
-        Log::info('Product opgehaald voor bewerken', [
-            'product_id' => $id,
-            'gevonden' => !empty($product)
-        ]);
 
         abort_if(! $product, 404);
 
@@ -107,25 +126,44 @@ class ProductController extends Controller
         ]);
     }
 
-    /** Updaten van product */
     public function update(Request $request, $id)
     {
         $product = $this->productModel->spGetProductById($id);
 
         abort_if(! $product, 404);
 
-        $data = $request->validate([
-            'product_naam' => ['required', 'string', 'max:100', 'unique:Product,ProductNaam,'.$id.',Id'],
-            'ean_code' => ['required', 'digits_between:1,13', 'unique:Product,EANCode,'.$id.',Id'],
-            'voorraad' => ['required', 'integer', 'min:0'],
-            'minimum_voorraad' => ['required', 'integer', 'min:0'],
-            'leverancier_id' => ['required', 'exists:Leverancier,Id'],
-            'categorie_id' => ['required', 'exists:ProductCategorie,Id'],
-            'is_actief' => ['required', 'boolean'],
-            'opmerking' => ['nullable', 'string', 'max:255'],
-            'treatment_ids' => ['nullable', 'array'],
-            'treatment_ids.*' => ['integer', 'exists:Behandeling,BehandelingId'],
-        ]);
+        $data = $request->validate(
+            [
+                'product_naam' => ['required', 'string', 'max:100', 'unique:Product,ProductNaam,'.$id.',Id'],
+                'ean_code' => ['required', 'digits_between:1,13', 'unique:Product,EANCode,'.$id.',Id'],
+                'voorraad' => ['required', 'integer', 'min:0'],
+                'minimum_voorraad' => ['required', 'integer', 'min:0'],
+                'leverancier_id' => ['required', 'exists:Leverancier,Id'],
+                'categorie_id' => ['required', 'exists:ProductCategorie,Id'],
+                'is_actief' => ['required', 'boolean'],
+                'opmerking' => ['nullable', 'string', 'max:255'],
+                'treatment_ids' => ['nullable', 'array'],
+                'treatment_ids.*' => ['integer', 'exists:Behandeling,BehandelingId'],
+            ],
+            [
+                'product_naam.required' => 'Productnaam is verplicht.',
+                'product_naam.unique' => 'Deze productnaam bestaat al.',
+
+                'ean_code.required' => 'EAN-code is verplicht.',
+                'ean_code.unique' => 'Deze EAN-code bestaat al.',
+
+                'voorraad.required' => 'Voorraad is verplicht.',
+                'voorraad.integer' => 'Voorraad moet een geheel getal zijn.',
+                'voorraad.min' => 'Voorraad mag niet negatief zijn.',
+
+                'minimum_voorraad.required' => 'Minimum voorraad is verplicht.',
+                'minimum_voorraad.integer' => 'Minimum voorraad moet een geheel getal zijn.',
+                'minimum_voorraad.min' => 'Minimum voorraad mag niet negatief zijn.',
+
+                'leverancier_id.required' => 'Leverancier is verplicht.',
+                'categorie_id.required' => 'Categorie is verplicht.',
+            ]
+        );
 
         Log::info('Product update gestart', [
             'product_id' => $id,
@@ -148,7 +186,6 @@ class ProductController extends Controller
         return back()->withInput()->with('error', 'Het product kon niet worden gewijzigd.');
     }
 
-    /** Verwijderen van product */
     public function destroy($id)
     {
         Log::info('Product verwijderverzoek ontvangen', [
