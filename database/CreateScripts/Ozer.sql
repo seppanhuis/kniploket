@@ -18,7 +18,7 @@ BEGIN
     FROM Product AS p
     LEFT JOIN Leverancier AS l ON l.Id = p.LeverancierId
     LEFT JOIN ProductCategorie AS c ON c.Id = p.CategorieId
-    ORDER BY p.ProductNaam ASC;
+    ORDER BY p.ProductNaam DESC;
 END$$
 
 DROP PROCEDURE IF EXISTS sp_CreateProduct$$
