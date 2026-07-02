@@ -135,6 +135,45 @@ it('shows products with low-stock warnings and creates a new product', function 
     $this->assertDatabaseHas('Product', ['ProductNaam' => 'Nieuw product']);
 });
 
+it('disables a product when delete is requested', function () {
+    $user = User::factory()->create([
+        'email_verified_at' => now(),
+    ]);
+
+    $categoryId = DB::table('ProductCategorie')->insertGetId([
+        'Naam' => 'Crèmes',
+        'IsActief' => true,
+        'DatumAangemaakt' => now(),
+        'DatumGewijzigd' => now(),
+    ]);
+
+    $supplierId = DB::table('Leverancier')->insertGetId([
+        'Naam' => 'Beauty Supply',
+        'Telefoonnummer' => '0123456789',
+        'Email' => 'info@example.com',
+        'IsActief' => true,
+        'DatumAangemaakt' => now(),
+        'DatumGewijzigd' => now(),
+    ]);
+
+    $productId = DB::table('Product')->insertGetId([
+        'ProductNaam' => 'Verwijder mij',
+        'EANCode' => '8711111111114',
+        'Voorraad' => 2,
+        'MinimumVoorraad' => 1,
+        'LeverancierId' => $supplierId,
+        'CategorieId' => $categoryId,
+        'IsActief' => true,
+        'DatumAangemaakt' => now(),
+        'DatumGewijzigd' => now(),
+    ]);
+
+    $response = $this->actingAs($user)->delete(route('producten.destroy', $productId));
+
+    $response->assertRedirect(route('producten.index'));
+    $this->assertDatabaseMissing('Product', ['Id' => $productId]);
+});
+
 it('rejects non-numeric ean codes and stores multiple treatment links', function () {
     $user = User::factory()->create([
         'email_verified_at' => now(),

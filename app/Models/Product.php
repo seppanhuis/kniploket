@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class Product extends Model
 {
@@ -132,18 +133,36 @@ class Product extends Model
         }
     }
 
-    /** Disable a product using the stored procedure or a fallback update. */
+    /** Permanently delete a product only when it is still active. */
     public function spDeleteProduct($id)
     {
-        try {
-            $row = DB::selectOne('CALL sp_DeleteProduct(:id)', ['id' => $id]);
+        $product = DB::table('Product')->where('Id', $id)->first();
 
-            return (int) ($row->affected ?? 0);
+        if (! $product || (int) $product->IsActief !== 1) {
+            Log::info('Product delete skipped because it is already inactive', ['product_id' => $id]);
+
+            return 0;
+        }
+
+        try {
+            return DB::transaction(function () use ($id) {
+                $removedTreatmentLinks = DB::table('BehandelingProduct')->where('ProductId', $id)->delete();
+                $removedOrderLines = DB::table('Bestelregel')->where('ProductId', $id)->delete();
+                $deleted = DB::table('Product')->where('Id', $id)->delete();
+
+                Log::info('Product delete executed', [
+                    'product_id' => $id,
+                    'deleted' => $deleted,
+                    'removed_treatment_links' => $removedTreatmentLinks,
+                    'removed_order_lines' => $removedOrderLines,
+                ]);
+
+                return (int) $deleted;
+            });
         } catch (\Throwable $e) {
-            return (int) DB::table('Product')->where('Id', $id)->update([
-                'IsActief' => false,
-                'DatumGewijzigd' => now(),
-            ]);
+            Log::warning('Product delete failed', ['product_id' => $id, 'reason' => $e->getMessage()]);
+
+            return 0;
         }
     }
 

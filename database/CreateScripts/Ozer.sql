@@ -113,11 +113,31 @@ CREATE PROCEDURE sp_DeleteProduct(
     IN p_id INT
 )
 BEGIN
-    UPDATE Product
-    SET
-        IsActief = 0,
-        DatumGewijzigd = SYSDATE(6)
-    WHERE Id = p_id;
+    SELECT CASE
+        WHEN EXISTS (
+            SELECT 1
+            FROM Product
+            WHERE Id = p_id
+              AND IsActief = 1
+        ) THEN 1
+        ELSE 0
+    END AS affected;
+
+    IF EXISTS (
+        SELECT 1
+        FROM Product
+        WHERE Id = p_id
+          AND IsActief = 1
+    ) THEN
+        DELETE FROM BehandelingProduct
+        WHERE ProductId = p_id;
+
+        DELETE FROM Bestelregel
+        WHERE ProductId = p_id;
+
+        DELETE FROM Product
+        WHERE Id = p_id;
+    END IF;
 
     SELECT ROW_COUNT() AS affected;
 END$$
