@@ -9,9 +9,7 @@ use Illuminate\View\View;
 
 class KlantController extends Controller
 {
-    public function __construct(protected Klant $klantModel)
-    {
-    }
+    public function __construct(protected Klant $klantModel) {}
 
     public function index(): View
     {
@@ -36,7 +34,7 @@ class KlantController extends Controller
             'voornaam' => ['required', 'string', 'max:50'],
             'achternaam' => ['required', 'string', 'max:50'],
             'email' => ['required', 'email', 'max:100', 'unique:Gebruiker,Email'],
-            'telefoonnummer' => ['required', 'string', 'max:20'],
+            'telefoonnummer' => ['required', 'regex:/^[0-9]{1,10}$/'],
             'wensen' => ['nullable', 'string', 'max:255'],
             'opmerking' => ['nullable', 'string', 'max:255'],
             'straat' => ['required', 'string', 'max:100'],
@@ -47,6 +45,7 @@ class KlantController extends Controller
             'is_actief' => ['nullable', 'boolean'],
         ], [
             'email.unique' => 'email al in gebruik',
+            'telefoonnummer.regex' => 'telefoonnummer mag alleen cijfers bevatten en maximaal 10 cijfers lang zijn',
         ]);
 
         $data['wachtwoord'] = bcrypt('Welkom123!');
@@ -75,21 +74,23 @@ class KlantController extends Controller
     public function update(Request $request, int $id): RedirectResponse
     {
         $data = $request->validate([
-            'voornaam' => ['required', 'string', 'max:50'],
-            'achternaam' => ['required', 'string', 'max:50'],
-            'email' => ['required', 'email', 'max:100', 'unique:Gebruiker,Email,'.$id.',Id'],
-            'telefoonnummer' => ['required', 'string', 'max:20'],
-            'wensen' => ['nullable', 'string', 'max:255'],
-            'opmerking' => ['nullable', 'string', 'max:255'],
-            'straat' => ['required', 'string', 'max:100'],
-            'huisnummer' => ['required', 'numeric', 'max:999999'],
-            'toevoeging' => ['nullable', 'string', 'max:5'],
-            'postcode' => ['required', 'string', 'max:6'],
-            'woonplaats' => ['required', 'string', 'max:50'],
-            'is_actief' => ['nullable', 'boolean'],
-        ], [
-            'email.unique' => 'email al in gebruik',
-        ]);
+    'voornaam' => ['required', 'string', 'max:50'],
+    'achternaam' => ['required', 'string', 'max:50'],
+    'email' => ['required', 'email', 'max:100', 'unique:Gebruiker,Email,'.$id.',Id'],
+    'telefoonnummer' => ['required', 'regex:/^[0-9]{1,10}$/'],
+    'wensen' => ['nullable', 'string', 'max:255'],
+    'opmerking' => ['nullable', 'string', 'max:255'],
+    'straat' => ['required', 'string', 'max:100'],
+    'huisnummer' => ['required', 'numeric', 'max:999999'],
+    'toevoeging' => ['nullable', 'string', 'max:5'],
+    'postcode' => ['required', 'string', 'max:6'],
+    'woonplaats' => ['required', 'string', 'max:50'],
+    'is_actief' => ['nullable', 'boolean'],
+], [
+    'email.unique' => 'email al in gebruik',
+    'telefoonnummer.regex' => 'telefoonnummer mag alleen cijfers bevatten en maximaal 10 cijfers lang zijn',
+]);
+
 
         $data['is_actief'] = $request->boolean('is_actief', true);
 

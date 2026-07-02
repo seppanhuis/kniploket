@@ -1320,7 +1320,7 @@ BEGIN
         K.DatumGewijzigd
     FROM Klant AS K
     INNER JOIN Gebruiker AS G ON G.Id = K.GebruikerId
-    ORDER BY K.Id ASC;
+    ORDER BY K.Id DESC;
 END$$
 
 DELIMITER ;
