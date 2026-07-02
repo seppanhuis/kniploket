@@ -12,21 +12,15 @@ class ProductController extends Controller
     /** @var Product */
     protected Product $productModel;
 
-    /** Create the product model instance used for stored procedure calls. */
     public function __construct()
     {
         $this->productModel = new Product();
     }
 
-    /** Show the overview page with all products, including inactive ones. */
+    /** Overzicht van alle producten inclusief inactieve */
     public function index()
     {
-       ;
-
-        // Load every product for the index so inactive products remain visible.
         $products = $this->productModel->spGetAllProducten();
-
-        
 
         foreach ($products as $product) {
             $product->treatments = $this->productModel->spGetTreatmentsForProduct($product->Id);
@@ -42,10 +36,10 @@ class ProductController extends Controller
         ]);
     }
 
-    /** Show the form for creating a new product. */
+    /** Formulier voor nieuw product */
     public function create()
     {
-        Log::info('Product create form opened');
+        Log::info('Product aanmaakformulier geopend');
 
         return view('producten.create', [
             'title' => 'Nieuw product toevoegen',
@@ -56,7 +50,7 @@ class ProductController extends Controller
         ]);
     }
 
-    /** Persist a new product and its selected treatments. */
+    /** Opslaan van nieuw product */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -72,25 +66,34 @@ class ProductController extends Controller
             'treatment_ids.*' => ['integer', 'exists:Behandeling,BehandelingId'],
         ]);
 
-        Log::info('Product create requested', ['product_name' => $data['product_naam']]);
+        Log::info('Nieuw product aangemaakt', [
+            'product_naam' => $data['product_naam']
+        ]);
 
         $productId = $this->productModel->spCreateProduct($data);
         $this->productModel->syncTreatmentsForProduct($productId, $request->input('treatment_ids', []));
 
-        Log::info('Product create completed', ['product_id' => $productId]);
+        Log::info('Product succesvol opgeslagen', [
+            'product_id' => $productId
+        ]);
 
         return redirect()->route('producten.index')
-            ->with('success', 'Product succesvol toegevoegd.');
+            ->with('success', 'Product is succesvol toegevoegd.');
     }
 
-    /** Show the form for editing an existing product. */
+    /** Bewerken formulier */
     public function edit($id)
     {
-        Log::info('Product edit requested', ['product_id' => $id]);
+        Log::info('Product bewerkverzoek ontvangen', [
+            'product_id' => $id
+        ]);
 
         $product = $this->productModel->spGetProductById($id);
 
-        Log::info('Product read for edit', ['product_id' => $id, 'found' => ! empty($product)]);
+        Log::info('Product opgehaald voor bewerken', [
+            'product_id' => $id,
+            'gevonden' => !empty($product)
+        ]);
 
         abort_if(! $product, 404);
 
@@ -104,7 +107,7 @@ class ProductController extends Controller
         ]);
     }
 
-    /** Update a product and synchronize its linked treatments. */
+    /** Updaten van product */
     public function update(Request $request, $id)
     {
         $product = $this->productModel->spGetProductById($id);
@@ -124,38 +127,51 @@ class ProductController extends Controller
             'treatment_ids.*' => ['integer', 'exists:Behandeling,BehandelingId'],
         ]);
 
-        Log::info('Product update requested', ['product_id' => $id, 'product_name' => $data['product_naam']]);
+        Log::info('Product update gestart', [
+            'product_id' => $id,
+            'product_naam' => $data['product_naam']
+        ]);
 
         $result = $this->productModel->spUpdateProduct($id, $data);
         $this->productModel->syncTreatmentsForProduct($id, $request->input('treatment_ids', []));
 
-        Log::info('Product update completed', ['product_id' => $id, 'result' => $result]);
+        Log::info('Product update voltooid', [
+            'product_id' => $id,
+            'resultaat' => $result
+        ]);
 
         if ($result > 0) {
             return redirect()->route('producten.index')
-                ->with('success', 'Product succesvol gewijzigd.');
+                ->with('success', 'Product is succesvol gewijzigd.');
         }
 
-        return back()->withInput()->with('error', 'Product kon niet worden gewijzigd.');
+        return back()->withInput()->with('error', 'Het product kon niet worden gewijzigd.');
     }
 
-    /** Remove a product permanently from the database. */
+    /** Verwijderen van product */
     public function destroy($id)
     {
-        Log::info('Product delete requested', ['product_id' => $id]);
+        Log::info('Product verwijderverzoek ontvangen', [
+            'product_id' => $id
+        ]);
 
         $deleted = $this->productModel->spDeleteProduct($id);
 
-        Log::info('Product delete result', ['product_id' => $id, 'deleted' => $deleted]);
+        Log::info('Resultaat van verwijderen product', [
+            'product_id' => $id,
+            'verwijderd' => $deleted
+        ]);
 
         if ($deleted > 0) {
             return redirect()->route('producten.index')
                 ->with('success', 'Product is verwijderd.');
         }
 
-        Log::warning('Product delete did not remove any rows', ['product_id' => $id]);
+        Log::warning('Product niet verwijderd (mogelijk al inactief)', [
+            'product_id' => $id
+        ]);
 
         return redirect()->route('producten.index')
-            ->with('error', 'Product staat of is al inactief en kan niet worden verwijderd.');
+            ->with('error', 'Product is al inactief of kon niet worden verwijderd.');
     }
 }
