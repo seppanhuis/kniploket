@@ -15,6 +15,14 @@
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="layout-grid" :href="route('producten.index')" :current="request()->routeIs('producten.*')" wire:navigate>
+                        {{ __('Producten') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="plus" :href="route('producten.create')" :current="request()->routeIs('producten.create')" wire:navigate>
+                        {{ __('Nieuw product') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

@@ -8,15 +8,19 @@ use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
+    /** @var Product */
     protected Product $productModel;
 
+    /** Create the product model instance used for stored procedure calls. */
     public function __construct()
     {
         $this->productModel = new Product();
     }
 
+    /** Show the overview page with all products, including inactive ones. */
     public function index()
     {
+        // Load every product for the index so inactive products remain visible.
         $products = $this->productModel->spGetAllProducten();
 
         foreach ($products as $product) {
@@ -33,6 +37,7 @@ class ProductController extends Controller
         ]);
     }
 
+    /** Show the form for creating a new product. */
     public function create()
     {
         return view('producten.create', [
@@ -44,6 +49,7 @@ class ProductController extends Controller
         ]);
     }
 
+    /** Persist a new product and its selected treatments. */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -66,6 +72,7 @@ class ProductController extends Controller
             ->with('success', 'Product succesvol toegevoegd.');
     }
 
+    /** Show the form for editing an existing product. */
     public function edit($id)
     {
         $product = $this->productModel->spGetProductById($id);
@@ -82,6 +89,7 @@ class ProductController extends Controller
         ]);
     }
 
+    /** Update a product and synchronize its linked treatments. */
     public function update(Request $request, $id)
     {
         $product = $this->productModel->spGetProductById($id);
@@ -112,13 +120,14 @@ class ProductController extends Controller
         return back()->withInput()->with('error', 'Product kon niet worden gewijzigd.');
     }
 
+    /** Disable a product instead of removing it from the database. */
     public function destroy($id)
     {
         $updated = $this->productModel->spDeleteProduct($id);
 
         if ($updated) {
             return redirect()->route('producten.index')
-                ->with('success', 'Product is uitgeschakeld.');
+                ->with('error', 'Product is uitgeschakeld.');
         }
 
         return redirect()->route('producten.index')

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class Product extends Model
 {
+    /** The database table used for products. */
     protected $table = 'Product';
 
     protected $primaryKey = 'Id';
@@ -26,12 +27,11 @@ class Product extends Model
         'DatumGewijzigd',
     ];
 
+    /** Retrieve all products for the overview page, including inactive products. */
     public function spGetAllProducten()
     {
-        try {
-            return collect(DB::select('CALL sp_GetAllProducten()'));
-        } catch (\Throwable $e) {
-            return DB::table('Product as p')
+        return collect(
+            DB::table('Product as p')
                 ->select(
                     'p.Id',
                     'p.ProductNaam',
@@ -47,12 +47,12 @@ class Product extends Model
                 )
                 ->leftJoin('Leverancier as l', 'l.Id', '=', 'p.LeverancierId')
                 ->leftJoin('ProductCategorie as c', 'c.Id', '=', 'p.CategorieId')
-                ->where('p.IsActief', true)
                 ->orderBy('p.ProductNaam')
-                ->get();
-        }
+                ->get()
+        );
     }
 
+    /** Create a new product through the stored procedure and fall back to Eloquent if needed. */
     public function spCreateProduct(array $data)
     {
         try {
@@ -87,6 +87,7 @@ class Product extends Model
         }
     }
 
+    /** Retrieve one product by id using the stored procedure when available. */
     public function spGetProductById($id)
     {
         try {
@@ -96,6 +97,7 @@ class Product extends Model
         }
     }
 
+    /** Update an existing product and return the affected row count. */
     public function spUpdateProduct($id, array $data)
     {
         try {
@@ -130,6 +132,7 @@ class Product extends Model
         }
     }
 
+    /** Disable a product using the stored procedure or a fallback update. */
     public function spDeleteProduct($id)
     {
         try {
@@ -144,6 +147,7 @@ class Product extends Model
         }
     }
 
+    /** Return the treatment names linked to a product. */
     public function spGetTreatmentsForProduct($productId)
     {
         try {
@@ -159,6 +163,7 @@ class Product extends Model
         }
     }
 
+    /** Return the active treatment ids currently linked to a product. */
     public function spGetTreatmentIdsForProduct($productId)
     {
         return collect(DB::table('BehandelingProduct')
@@ -167,6 +172,7 @@ class Product extends Model
             ->pluck('BehandelingId'));
     }
 
+    /** Synchronize the treatments linked to a product by activating the selected ones. */
     public function syncTreatmentsForProduct($productId, array $treatmentIds = [])
     {
         DB::table('BehandelingProduct')->where('ProductId', $productId)->update([
