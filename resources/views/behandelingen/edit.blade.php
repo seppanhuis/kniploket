@@ -1,0 +1,128 @@
+<x-layouts::app :title="$title">
+    <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl p-4 sm:p-6 lg:p-8">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">
+                {{ $title }}
+            </h1>
+            <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                Wijzig de geselecteerde behandeling.
+            </p>
+        </div>
+
+        @if ($errors->any())
+            <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
+                <ul class="list-disc space-y-1 pl-5">
+                    @foreach ($errors->all() as $err)
+                        <li>{{ $err }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('behandelingen.update', $behandeling->BehandelingId) }}" class="max-w-2xl rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            @csrf
+            @method('PUT')
+
+            <div class="space-y-5">
+                <div>
+                    <label for="naam" class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                        Naam
+                    </label>
+                    <input
+                        type="text"
+                        id="naam"
+                        name="naam"
+                        value="{{ old('naam', $behandeling->Naam) }}"
+                        required
+                        class="block w-full rounded-xl border-zinc-300 bg-white px-4 py-2.5 text-zinc-900 shadow-sm focus:border-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                    >
+                </div>
+
+                <div>
+                    <label for="prijs" class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                        Prijs
+                    </label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        id="prijs"
+                        name="prijs"
+                        value="{{ old('prijs', $behandeling->Prijs) }}"
+                        required
+                        class="block w-full rounded-xl border-zinc-300 bg-white px-4 py-2.5 text-zinc-900 shadow-sm focus:border-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                    >
+                </div>
+
+                <div>
+                    <label for="duur_minuten" class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                        Duur in minuten
+                    </label>
+                    <input
+                        type="number"
+                        min="1"
+                        id="duur_minuten"
+                        name="duur_minuten"
+                        value="{{ old('duur_minuten', $behandeling->DuurMinuten) }}"
+                        required
+                        class="block w-full rounded-xl border-zinc-300 bg-white px-4 py-2.5 text-zinc-900 shadow-sm focus:border-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                    >
+                </div>
+
+                <div>
+                    <label for="is_actief" class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                        Status
+                    </label>
+                    <select
+                        id="is_actief"
+                        name="is_actief"
+                        required
+                        class="block w-full rounded-xl border-zinc-300 bg-white px-4 py-2.5 text-zinc-900 shadow-sm focus:border-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                    >
+                        <option value="1" {{ old('is_actief', $behandeling->IsActief) == 1 ? 'selected' : '' }}>
+                            Actief
+                        </option>
+                        <option value="0" {{ old('is_actief', $behandeling->IsActief) == 0 ? 'selected' : '' }}>
+                            Inactief
+                        </option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="opmerking" class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                        Opmerking
+                    </label>
+                    <input
+                        type="text"
+                        id="opmerking"
+                        name="opmerking"
+                        value="{{ old('opmerking', $behandeling->Opmerking) }}"
+                        class="block w-full rounded-xl border-zinc-300 bg-white px-4 py-2.5 text-zinc-900 shadow-sm focus:border-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                    >
+                </div>
+            </div>
+
+            <div class="mt-6 flex items-center gap-3">
+                <button
+                    type="submit"
+                    class="inline-flex items-center rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                >
+                    Opslaan
+                </button>
+
+                <a
+                    href="{{ route('behandelingen.index') }}"
+                    class="inline-flex items-center rounded-lg border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                >
+                    Annuleren
+                </a>
+            </div>
+        </form>
+    </div>
+</x-layouts::app>
