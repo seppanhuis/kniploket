@@ -8,12 +8,28 @@ use Illuminate\Support\Facades\DB;
 class Afspraak extends Model
 {
     protected $table = 'Afspraak';
-
     protected $primaryKey = 'Id';
-
     public $incrementing = true;
-
     public $timestamps = false;
+
+    /**
+     * 🔎 Controle: bestaat er al een afspraak op hetzelfde tijdslot?
+     */
+    private function bestaatOverlap(array $data, ?int $ignoreId = null): bool
+    {
+        $query = DB::table('Afspraak')
+            ->whereDate('Datum', $data['datum'])
+            ->where(function ($q) use ($data) {
+                $q->where('StartTijd', '<', $data['eind_tijd'])
+                  ->where('EindTijd', '>', $data['start_tijd']);
+            });
+
+        if ($ignoreId !== null) {
+            $query->where('Id', '!=', $ignoreId);
+        }
+
+        return $query->exists();
+    }
 
     public function spGetAllAfspraken(): array
     {
@@ -48,6 +64,10 @@ class Afspraak extends Model
 
     public function spCreateAfspraak(array $data): object
     {
+        if ($this->bestaatOverlap($data)) {
+            throw new \Exception("Er bestaat al een afspraak op dit tijdslot.");
+        }
+
         try {
             return DB::selectOne(
                 'CALL sp_CreateAfspraak(:klant_id, :medewerker_id, :behandeling_id, :afspraak_status_id, :datum, :start_tijd, :eind_tijd, :is_actief, :opmerking)',
@@ -60,7 +80,7 @@ class Afspraak extends Model
                     'start_tijd' => $data['start_tijd'],
                     'eind_tijd' => $data['eind_tijd'],
                     'is_actief' => $data['is_actief'] ?? true,
-                    'opmerking' => $data['opmerking'],
+                    'opmerking' => $data['opmerking'] ?? null,
                 ]
             );
         } catch (\Throwable $e) {
@@ -79,7 +99,7 @@ class Afspraak extends Model
                 'StartTijd' => $data['start_tijd'],
                 'EindTijd' => $data['eind_tijd'],
                 'IsActief' => $data['is_actief'] ?? true,
-                'Opmerking' => $data['opmerking'],
+                'Opmerking' => $data['opmerking'] ?? null,
                 'DatumAangemaakt' => now(),
                 'DatumGewijzigd' => now(),
             ]);
@@ -96,7 +116,6 @@ class Afspraak extends Model
                 ['id' => $id]
             );
         } catch (\Throwable) {
-
             return DB::selectOne(
                 'SELECT * FROM Afspraak WHERE Id = :id',
                 ['id' => $id]
@@ -119,7 +138,7 @@ class Afspraak extends Model
                     'start_tijd' => $data['start_tijd'],
                     'eind_tijd' => $data['eind_tijd'],
                     'is_actief' => $data['is_actief'] ?? true,
-                    'opmerking' => $data['opmerking'],
+                    'opmerking' => $data['opmerking'] ?? null,
                 ]
             );
 
@@ -140,7 +159,7 @@ class Afspraak extends Model
                     'StartTijd' => $data['start_tijd'],
                     'EindTijd' => $data['eind_tijd'],
                     'IsActief' => $data['is_actief'] ?? true,
-                    'Opmerking' => $data['opmerking'],
+                    'Opmerking' => $data['opmerking'] ?? null,
                     'DatumGewijzigd' => now(),
                 ]);
         }
@@ -154,7 +173,6 @@ class Afspraak extends Model
     public function spDeleteAfspraak(int $id): int
     {
         try {
-
             $row = DB::selectOne(
                 'CALL sp_DeleteAfspraak(:id)',
                 ['id' => $id]
