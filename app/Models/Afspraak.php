@@ -2,16 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
-class Afspraak extends Model
+class Afspraak
 {
-    protected $table = 'Afspraak';
-    protected $primaryKey = 'Id';
-    public $incrementing = true;
-    public $timestamps = false;
-
     /**
      * 🔎 Controle: bestaat er al een afspraak op hetzelfde tijdslot?
      */

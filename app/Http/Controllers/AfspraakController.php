@@ -6,6 +6,7 @@ use App\Models\Afspraak;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Carbon\Carbon;
 
@@ -133,7 +134,17 @@ class AfspraakController extends Controller
         $data['eind_tijd'] = $end->format('H:i:s');
         $data['datum'] = $start->format('Y-m-d H:i:s');
 
-        $result = $this->afspraakModel->spUpdateAfspraak($id, $data);
+        try {
+            $result = $this->afspraakModel->spUpdateAfspraak($id, $data);
+        } catch (\Throwable $e) {
+            if ((string) $e->getCode() === '45000' || str_contains($e->getMessage(), 'Er bestaat al een afspraak op dit tijdslot')) {
+                throw ValidationException::withMessages([
+                    'start_tijd' => 'Dit tijdslot is al bezet.',
+                ]);
+            }
+
+            throw $e;
+        }
 
         return ($result > 0)
             ? redirect()->route('afspraken.index')->with('success', 'Gewijzigd')
