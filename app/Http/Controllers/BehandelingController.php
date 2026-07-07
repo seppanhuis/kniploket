@@ -153,29 +153,47 @@ class BehandelingController extends Controller
     }
 
     public function destroy($id)
-{
-    try {
-        $result = $this->behandelingModel->sp_DeleteBehandeling((int) $id);
+    {
+        try {
+            $result = $this->behandelingModel->sp_DeleteBehandeling((int) $id);
 
-        if (($result->affected ?? 0) > 0) {
+            if (($result['status'] ?? '') === 'deleted' && ($result['affected'] ?? 0) > 0) {
+                return redirect()
+                    ->route('behandelingen.index')
+                    ->with('success', 'Behandeling succesvol verwijderd');
+            }
+
+            if (($result['status'] ?? '') === 'inactive') {
+                return redirect()
+                    ->route('behandelingen.index')
+                    ->with('error', $result['message'] ?? 'Behandeling kan niet worden verwijderd omdat deze inactief is.');
+            }
+
+            if (($result['status'] ?? '') === 'not_found') {
+                return redirect()
+                    ->route('behandelingen.index')
+                    ->with('error', $result['message'] ?? 'Behandeling bestaat niet of is al verwijderd.');
+            }
+
+            if (($result['status'] ?? '') === 'error') {
+                return redirect()
+                    ->route('behandelingen.index')
+                    ->with('error', $result['message'] ?? 'Behandeling kon niet worden verwijderd.');
+            }
+
             return redirect()
                 ->route('behandelingen.index')
-                ->with('success', 'Behandeling succesvol verwijderd');
+                ->with('error', $result['message'] ?? 'Behandeling kon niet worden verwijderd. Controleer of deze nog bestaat.');
+        } catch (\Throwable $e) {
+            Log::error('Fout bij verwijderen behandeling', [
+                'id' => $id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()
+                ->route('behandelingen.index')
+                ->with('error', 'Behandeling kon niet worden verwijderd door een fout in de database.');
         }
-
-        return redirect()
-            ->route('behandelingen.index')
-            ->with('error', 'Behandeling bestaat niet of is al verwijderd');
-    } catch (\Throwable $e) {
-        Log::error('Fout bij verwijderen behandeling', [
-            'id' => $id,
-            'message' => $e->getMessage(),
-        ]);
-
-        return redirect()
-            ->route('behandelingen.index')
-            ->with('error', 'Er is een fout opgetreden bij het verwijderen van de behandeling.');
     }
-}
 
 }
