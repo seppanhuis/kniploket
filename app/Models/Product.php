@@ -28,16 +28,19 @@ class Product extends Model
         'DatumGewijzigd',
     ];
 
-    /** Retrieve all products for the overview page via the stored procedure. */
+    /** Retrieve all products for the overview page via the stored procedure.  */
     public function spGetAllProducten()
     {
         try {
             $products = collect(DB::select('CALL sp_GetAllProducten()'));
 
             return $products->sortByDesc(function ($product) {
+                $modifiedAt = data_get($product, 'DatumGewijzigd');
+                $createdAt = data_get($product, 'DatumAangemaakt');
+
                 $dates = array_filter([
-                    $product->DatumGewijzigd ? strtotime($product->DatumGewijzigd) : null,
-                    $product->DatumAangemaakt ? strtotime($product->DatumAangemaakt) : null,
+                    $modifiedAt ? strtotime($modifiedAt) : null,
+                    $createdAt ? strtotime($createdAt) : null,
                 ]);
 
                 return $dates ? max($dates) : 0;
@@ -166,6 +169,14 @@ class Product extends Model
         try {
             return collect(DB::select('CALL sp_GetActiveProductCategories()'));
         } catch (\Throwable $e) {
+            if ($this->isMissingProcedureException($e)) {
+                return DB::table('ProductCategorie')
+                    ->select(['Id', 'Naam'])
+                    ->where('IsActief', 1)
+                    ->orderBy('Naam')
+                    ->get();
+            }
+
             Log::warning('sp_GetActiveProductCategories failed', ['reason' => $e->getMessage()]);
 
             return collect();
@@ -178,6 +189,14 @@ class Product extends Model
         try {
             return collect(DB::select('CALL sp_GetActiveSuppliers()'));
         } catch (\Throwable $e) {
+            if ($this->isMissingProcedureException($e)) {
+                return DB::table('Leverancier')
+                    ->select(['Id', 'Naam'])
+                    ->where('IsActief', 1)
+                    ->orderBy('Naam')
+                    ->get();
+            }
+
             Log::warning('sp_GetActiveSuppliers failed', ['reason' => $e->getMessage()]);
 
             return collect();
@@ -190,6 +209,14 @@ class Product extends Model
         try {
             return collect(DB::select('CALL sp_GetActiveTreatments()'));
         } catch (\Throwable $e) {
+            if ($this->isMissingProcedureException($e)) {
+                return DB::table('Behandeling')
+                    ->select(['BehandelingId', 'Naam'])
+                    ->where('IsActief', 1)
+                    ->orderBy('Naam')
+                    ->get();
+            }
+
             Log::warning('sp_GetActiveTreatments failed', ['reason' => $e->getMessage()]);
 
             return collect();
@@ -204,6 +231,14 @@ class Product extends Model
 
             return collect($rows)->pluck('BehandelingId');
         } catch (\Throwable $e) {
+            if ($this->isMissingProcedureException($e)) {
+                return DB::table('BehandelingProduct')
+                    ->where('ProductId', $productId)
+                    ->where('IsActief', 1)
+                    ->orderBy('BehandelingId')
+                    ->pluck('BehandelingId');
+            }
+
             Log::warning('sp_GetTreatmentIdsForProduct failed', ['product_id' => $productId, 'reason' => $e->getMessage()]);
 
             return collect();
@@ -223,9 +258,86 @@ class Product extends Model
 
             return true;
         } catch (\Throwable $e) {
-            Log::warning('sp_SyncTreatmentsForProduct failed', ['product_id' => $productId, 'reason' => $e->getMessage()]);
+            if (! $this->isMissingProcedureException($e)) {
+                Log::warning('sp_SyncTreatmentsForProduct failed', ['product_id' => $productId, 'reason' => $e->getMessage()]);
 
-            return false;
+                return false;
+            }
+
+            $selectedIds = collect($treatmentIds)
+                ->map(fn ($id) => (int) $id)
+                ->filter(fn ($id) => $id > 0)
+                ->unique()
+                ->values();
+
+            try {
+                DB::transaction(function () use ($productId, $selectedIds) {
+                    $now = now();
+
+                    if ($selectedIds->isEmpty()) {
+                        DB::table('BehandelingProduct')
+                            ->where('ProductId', $productId)
+                            ->update([
+                                'IsActief' => 0,
+                                'DatumGewijzigd' => $now,
+                            ]);
+
+                        return;
+                    }
+
+                    DB::table('BehandelingProduct')
+                        ->where('ProductId', $productId)
+                        ->whereIn('BehandelingId', $selectedIds->all())
+                        ->update([
+                            'IsActief' => 1,
+                            'DatumGewijzigd' => $now,
+                        ]);
+
+                    $existingIds = DB::table('BehandelingProduct')
+                        ->where('ProductId', $productId)
+                        ->pluck('BehandelingId')
+                        ->map(fn ($id) => (int) $id)
+                        ->all();
+
+                    $missingIds = array_values(array_diff($selectedIds->all(), $existingIds));
+
+                    foreach ($missingIds as $behandelingId) {
+                        DB::table('BehandelingProduct')->insert([
+                            'BehandelingId' => $behandelingId,
+                            'ProductId' => $productId,
+                            'Aantal' => 1,
+                            'IsActief' => 1,
+                            'Opmerking' => null,
+                            'DatumAangemaakt' => $now,
+                            'DatumGewijzigd' => $now,
+                        ]);
+                    }
+
+                    DB::table('BehandelingProduct')
+                        ->where('ProductId', $productId)
+                        ->whereNotIn('BehandelingId', $selectedIds->all())
+                        ->update([
+                            'IsActief' => 0,
+                            'DatumGewijzigd' => $now,
+                        ]);
+                });
+
+                return true;
+            } catch (\Throwable $fallbackException) {
+                Log::warning('sp_SyncTreatmentsForProduct fallback failed', [
+                    'product_id' => $productId,
+                    'reason' => $fallbackException->getMessage(),
+                ]);
+
+                return false;
+            }
         }
+    }
+
+    private function isMissingProcedureException(\Throwable $e): bool
+    {
+        $message = $e->getMessage();
+
+        return str_contains($message, 'does not exist') && str_contains($message, 'PROCEDURE');
     }
 }
