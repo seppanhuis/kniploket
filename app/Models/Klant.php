@@ -265,6 +265,14 @@ class Klant extends Model
 
     public function spDeleteKlant(int $id): int
     {
+        if ($this->heeftAfspraken($id)) {
+            Log::warning('Klant verwijderen geweigerd: klant heeft nog afspraken', [
+                'id' => $id,
+            ]);
+
+            return 0;
+        }
+
         try {
             Log::info('Klant verwijderen via procedure', ['id' => $id]);
 
@@ -291,5 +299,12 @@ class Klant extends Model
 
             return (int) $deleted;
         }
+    }
+
+    public function heeftAfspraken(int $id): bool
+    {
+        return DB::table('Afspraak')
+            ->where('KlantId', $id)
+            ->exists();
     }
 }

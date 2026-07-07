@@ -122,6 +122,10 @@ class KlantController extends Controller
             return redirect()->route('klanten.index')->with('error', 'je kan jezelf niet verwijderen');
         }
 
+        if ($this->klantModel->heeftAfspraken($id)) {
+            return redirect()->route('klanten.index')->with('error', 'klant kan niet worden verwijderd omdat er nog afspraken gekoppeld zijn');
+        }
+
         $result = $this->klantModel->spDeleteKlant($id);
 
         if ($result > 0) {
