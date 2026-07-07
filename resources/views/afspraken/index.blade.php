@@ -43,6 +43,7 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-zinc-500">Datum</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-zinc-500">Tijd</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-zinc-500">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-zinc-500">Actief</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-zinc-500">Opmerking</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-zinc-500">Acties</th>
                         </tr>
@@ -75,6 +76,14 @@
 
                                 <td class="px-4 py-3 text-sm text-zinc-700 dark:text-zinc-200">
                                     {{ $afspraak->Status ?? '-' }}
+                                </td>
+
+                                <td class="px-4 py-3 text-sm text-zinc-700 dark:text-zinc-200">
+                                    @if ((int) ($afspraak->IsActief ?? 0) === 1)
+                                        Actief
+                                    @else
+                                        Inactief
+                                    @endif
                                 </td>
 
                                 <td class="px-4 py-3 text-sm text-zinc-700 dark:text-zinc-200">
@@ -111,7 +120,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-4 py-6 text-center text-sm text-zinc-500">
+                                <td colspan="9" class="px-4 py-6 text-center text-sm text-zinc-500">
                                     Geen afspraken gevonden
                                 </td>
                             </tr>

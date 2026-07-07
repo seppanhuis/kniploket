@@ -46,6 +46,7 @@ class AfspraakController extends Controller
             'eind_tijd' => ['required'],
             'opmerking' => ['nullable', 'string', 'max:255'],
         ]);
+        $data['is_actief'] = $request->boolean('is_actief');
 
         $start = Carbon::createFromFormat('Y-m-d H:i', $data['datum'].' '.$data['start_tijd']);
         $end   = Carbon::createFromFormat('Y-m-d H:i', $data['datum'].' '.$data['eind_tijd']);
@@ -104,7 +105,9 @@ class AfspraakController extends Controller
             'datum' => ['required'],
             'start_tijd' => ['required'],
             'eind_tijd' => ['required'],
+            'is_actief' => ['nullable'],
         ]);
+        $data['is_actief'] = $request->boolean('is_actief');
 
         $start = Carbon::createFromFormat('Y-m-d H:i', $data['datum'].' '.$data['start_tijd']);
         $end   = Carbon::createFromFormat('Y-m-d H:i', $data['datum'].' '.$data['eind_tijd']);
@@ -135,6 +138,28 @@ class AfspraakController extends Controller
         return ($result > 0)
             ? redirect()->route('afspraken.index')->with('success', 'Gewijzigd')
             : back()->with('error', 'Mislukt');
+    }
+
+    public function destroy(int $id): RedirectResponse
+    {
+        $afspraak = DB::table('Afspraak')
+            ->select('IsActief')
+            ->where('Id', $id)
+            ->first();
+
+        if (! $afspraak) {
+            return redirect()->route('afspraken.index')->with('error', 'Afspraak niet gevonden.');
+        }
+
+        if (! (bool) $afspraak->IsActief) {
+            return redirect()->route('afspraken.index')->with('error', 'Inactieve afspraken kunnen niet worden verwijderd');
+        }
+
+        $deleted = $this->afspraakModel->spDeleteAfspraak($id);
+
+        return ($deleted > 0)
+            ? redirect()->route('afspraken.index')->with('success', 'Afspraak verwijderd.')
+            : redirect()->route('afspraken.index')->with('error', 'Afspraak kon niet worden verwijderd.');
     }
 
     /**
