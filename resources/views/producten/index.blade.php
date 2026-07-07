@@ -142,50 +142,6 @@
                 </table>
             </div>
 
-            {{-- GRID VERSION (DESKTOP EXTRA MODERN LOOK) --}}
-            <div class="hidden xl:grid grid-cols-2 gap-3 p-4">
-                @foreach ($products as $product)
-                    <div class="rounded-xl border border-zinc-200 dark:border-zinc-800 p-3 bg-white dark:bg-zinc-950">
-
-                        <div class="flex justify-between">
-                            <div class="font-semibold text-sm truncate" title="{{ $product->ProductNaam }}">
-                                {{ $product->ProductNaam }}
-                            </div>
-
-                            <div class="text-xs text-zinc-500" title="Voorraad">
-                                {{ $product->Voorraad }}
-                            </div>
-                        </div>
-
-                        <div class="text-xs text-zinc-500 mt-1" title="EAN">
-                            {{ $product->EANCode }}
-                        </div>
-
-                        <div class="mt-2 flex justify-between text-xs">
-                            <span>{{ $product->categorie_naam ?? '-' }}</span>
-                            <span>{{ $product->leverancier_naam ?? '-' }}</span>
-                        </div>
-
-                        <div class="mt-3 flex gap-2">
-                            <a href="{{ route('producten.edit', $product->Id) }}"
-                                class="flex-1 text-center text-xs bg-emerald-600 text-white rounded py-1" title="Bewerken">
-                                Edit
-                            </a>
-
-                            <form action="{{ route('producten.destroy', $product->Id) }}" method="POST">
-                                @csrf
-                                @method('DELETE')
-
-                                <button class="flex-1 text-xs bg-rose-600 text-white rounded py-1" title="Verwijderen">
-                                    Del
-                                </button>
-                            </form>
-                        </div>
-
-                    </div>
-                @endforeach
-            </div>
-
             {{-- MOBILE --}}
             <div class="space-y-3 p-3 lg:hidden">
 
