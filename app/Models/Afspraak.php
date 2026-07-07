@@ -83,8 +83,13 @@ class Afspraak extends Model
                     'opmerking' => $data['opmerking'] ?? null,
                 ]
             );
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            // Business-rule violation (bv. overlap) -> NIET afvangen, doorgooien
+            if ($this->isBusinessRuleViolation($e)) {
+                throw $e;
+            }
 
+            // Alleen hier belanden als sp_CreateAfspraak niet bestaat
             $id = DB::table('Afspraak')->insertGetId([
                 'KlantId' => $data['klant_id'],
                 'MedewerkerId' => $data['medewerker_id'],
@@ -120,10 +125,6 @@ class Afspraak extends Model
 
     public function spUpdateAfspraak(int $id, array $data): int
     {
-        if ($this->bestaatOverlap($data, $id)) {
-            throw new \Exception("Er bestaat al een afspraak op dit tijdslot.");
-        }
-
         try {
             $row = DB::selectOne(
                 'CALL sp_UpdateAfspraak(:id, :klant_id, :medewerker_id, :behandeling_id, :afspraak_status_id, :datum, :start_tijd, :eind_tijd, :is_actief, :opmerking)',
@@ -142,8 +143,10 @@ class Afspraak extends Model
             );
 
             return (int) ($row->affected ?? 0);
-
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            if ($this->isBusinessRuleViolation($e)) {
+                throw $e;
+            }
 
             return (int) DB::table('Afspraak')
                 ->where('Id', $id)
@@ -160,6 +163,11 @@ class Afspraak extends Model
                     'DatumGewijzigd' => now(),
                 ]);
         }
+    }
+
+    private function isBusinessRuleViolation(\Throwable $e): bool
+    {
+        return $e->getCode() === '45000';
     }
 
     public function spDeleteAfspraak(int $id): int

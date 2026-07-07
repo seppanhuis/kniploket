@@ -10,11 +10,25 @@
             </p>
         </div>
 
-        {{-- ERRORS --}}
-        @if ($errors->any())
+        {{-- SUCCES / ERROR MELDINGEN --}}
+        @if (session('error'))
+            <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        @if (session('success'))
+            <div class="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        {{-- VALIDATION ERRORS --}}
+        @php($errorsBag = $errors ?? null)
+        @if ($errorsBag && $errorsBag->any())
             <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
                 <ul class="list-disc pl-5">
-                    @foreach ($errors->all() as $error)
+                    @foreach ($errorsBag->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
                 </ul>
