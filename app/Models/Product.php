@@ -28,7 +28,7 @@ class Product extends Model
         'DatumGewijzigd',
     ];
 
-    /** Retrieve all products for the overview page via the stored procedure. */
+    /** Retrieve all products for the overview page via the stored procedure.  */
     public function spGetAllProducten()
     {
         try {
