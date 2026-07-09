@@ -1,5 +1,40 @@
 <x-layouts::app :title="$title">
-    <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl p-4 sm:p-6 lg:p-8">
+    <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl p-4 sm:p-6 lg:p-8"
+         x-data="{ openDelete: false, deleteForm: null }">
+
+        <div x-show="openDelete"
+             x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+
+            <div class="w-full max-w-md rounded-2xl border border-rose-600 bg-white p-6 shadow-xl dark:bg-zinc-900">
+
+                <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
+                    Afspraak verwijderen
+                </h2>
+
+                <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                    Weet je zeker dat je deze afspraak wilt verwijderen?
+                </p>
+
+                <div class="mt-6 flex justify-end gap-3">
+
+                    <button type="button"
+                            @click="openDelete = false"
+                            class="rounded-lg bg-zinc-200 px-4 py-2 text-sm hover:bg-zinc-300 dark:bg-zinc-800 dark:text-white">
+                        Annuleren
+                    </button>
+
+                    <button type="button"
+                            @click="deleteForm.submit()"
+                            class="rounded-lg bg-rose-600 px-4 py-2 text-sm text-white hover:bg-rose-500">
+                        Verwijderen
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
 
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -99,14 +134,15 @@
                                             Wijzigen
                                         </a>
 
-                                        <form method="POST"
-                                              action="{{ route('afspraken.destroy', $afspraak->Id) }}"
-                                              onsubmit="return confirm('Weet je zeker dat je deze afspraak wilt verwijderen?')">
+                                                                                <form method="POST"
+                                                                                            action="{{ route('afspraken.destroy', $afspraak->Id) }}"
+                                                                                            x-ref="deleteForm{{ $afspraak->Id }}">
 
                                             @csrf
                                             @method('DELETE')
 
-                                            <button type="submit"
+                                                                                        <button type="button"
+                                                                                                        @click="deleteForm = $refs.deleteForm{{ $afspraak->Id }}; openDelete = true"
                                                     title="Afspraak verwijderen"
                                                     class="rounded-lg border border-rose-300 px-3 py-1.5 text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/40">
                                                 Verwijderen
