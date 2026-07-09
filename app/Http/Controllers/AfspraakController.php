@@ -73,7 +73,17 @@ class AfspraakController extends Controller
         $data['eind_tijd'] = $end->format('H:i:s');
         $data['datum'] = $start->format('Y-m-d H:i:s');
 
-        $result = $this->afspraakModel->spCreateAfspraak($data);
+        try {
+            $result = $this->afspraakModel->spCreateAfspraak($data);
+        } catch (\Throwable $e) {
+            if ((string) $e->getCode() === '45000' || str_contains($e->getMessage(), 'afspraak')) {
+                throw ValidationException::withMessages([
+                    'start_tijd' => 'Dit tijdslot is al bezet.',
+                ]);
+            }
+
+            throw $e;
+        }
 
         return ($result && $result->new_id)
             ? redirect()->route('afspraken.index')->with('success', 'Toegevoegd')
